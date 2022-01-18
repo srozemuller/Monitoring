@@ -1,0 +1,554 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "AppId": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['keyvault']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent('AppId')}/value"
+                },
+                "runAfter": {},
+                "type": "ApiConnection"
+            },
+            "AppSecret": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['keyvault']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent('AppSecret')}/value"
+                },
+                "runAfter": {
+                    "AppId": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
+            "ForEach_storage_account": {
+                "actions": {
+                    "For_each_file_share": {
+                        "actions": {
+                            "Calculate_percentage_based_on_storage_quota": {
+                                "inputs": "@mul(div(variables('storageUsage'),body('Parse_fileshare_info_JSON')?['properties']?['shareQuota']),100)",
+                                "runAfter": {
+                                    "set_usage_variable_in_GB": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "Compose"
+                            },
+                            "Convert_usage_in_bytes_to_GB": {
+                                "inputs": "@div(div(div(variables('storageUsage'),1024),1024),1024)",
+                                "runAfter": {
+                                    "Set_initial_usage_variable": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "Compose"
+                            },
+                            "Parse_fileshare_info_JSON": {
+                                "inputs": {
+                                    "content": "@body('Request_for_file_share_info')",
+                                    "schema": {
+                                        "properties": {
+                                            "etag": {
+                                                "type": "string"
+                                            },
+                                            "id": {
+                                                "type": "string"
+                                            },
+                                            "name": {
+                                                "type": "string"
+                                            },
+                                            "properties": {
+                                                "properties": {
+                                                    "accessTier": {
+                                                        "type": "string"
+                                                    },
+                                                    "enabledProtocols": {
+                                                        "type": "string"
+                                                    },
+                                                    "lastModifiedTime": {
+                                                        "type": "string"
+                                                    },
+                                                    "leaseState": {
+                                                        "type": "string"
+                                                    },
+                                                    "leaseStatus": {
+                                                        "type": "string"
+                                                    },
+                                                    "shareQuota": {
+                                                        "type": "integer"
+                                                    },
+                                                    "shareUsageBytes": {
+                                                        "type": "integer"
+                                                    },
+                                                    "signedIdentifiers": {
+                                                        "type": "array"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "type": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "runAfter": {
+                                    "Request_for_file_share_info": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "ParseJson"
+                            },
+                            "Request_for_file_share_info": {
+                                "inputs": {
+                                    "authentication": {
+                                        "audience": "https://management.azure.com",
+                                        "clientId": "@body('AppId')?['value']",
+                                        "secret": "@body('AppSecret')?['value']",
+                                        "tenant": "@body('TentantId')?['value']",
+                                        "type": "ActiveDirectoryOAuth"
+                                    },
+                                    "method": "GET",
+                                    "uri": "https://management.azure.com@{items('For_each_file_share')?['id']}?api-version=2021-04-01&$expand=stats"
+                                },
+                                "runAfter": {},
+                                "type": "Http"
+                            },
+                            "Set_initial_usage_variable": {
+                                "inputs": {
+                                    "name": "storageUsage",
+                                    "value": "@body('Parse_fileshare_info_JSON')?['properties']?['shareUsageBytes']"
+                                },
+                                "runAfter": {
+                                    "Parse_fileshare_info_JSON": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "SetVariable"
+                            },
+                            "set_usage_variable_in_GB": {
+                                "inputs": {
+                                    "name": "storageUsage",
+                                    "value": "@outputs('Convert_usage_in_bytes_to_GB')"
+                                },
+                                "runAfter": {
+                                    "Convert_usage_in_bytes_to_GB": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "SetVariable"
+                            }
+                        },
+                        "foreach": "@body('Parse_fileshare_JSON')?['value']",
+                        "runAfter": {
+                            "Parse_fileshare_JSON": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "Foreach"
+                    },
+                    "Parse_fileshare_JSON": {
+                        "inputs": {
+                            "content": "@body('Request_for_file_shares')",
+                            "schema": {
+                                "properties": {
+                                    "value": {
+                                        "items": {
+                                            "properties": {
+                                                "etag": {
+                                                    "type": "string"
+                                                },
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "properties": {
+                                                    "properties": {
+                                                        "accessTier": {
+                                                            "type": "string"
+                                                        },
+                                                        "enabledProtocols": {
+                                                            "type": "string"
+                                                        },
+                                                        "lastModifiedTime": {
+                                                            "type": "string"
+                                                        },
+                                                        "leaseState": {
+                                                            "type": "string"
+                                                        },
+                                                        "leaseStatus": {
+                                                            "type": "string"
+                                                        },
+                                                        "shareQuota": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "type": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "name",
+                                                "type",
+                                                "etag",
+                                                "properties"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "type": "array"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "runAfter": {
+                            "Request_for_file_shares": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ParseJson"
+                    },
+                    "Request_for_file_shares": {
+                        "inputs": {
+                            "authentication": {
+                                "audience": "https://management.azure.com",
+                                "clientId": "@body('AppId')?['value']",
+                                "secret": "@body('AppSecret')?['value']",
+                                "tenant": "@body('TentantId')?['value']",
+                                "type": "ActiveDirectoryOAuth"
+                            },
+                            "method": "GET",
+                            "uri": "https://management.azure.com@{items('ForEach_storage_account')?['id']}/fileServices/default/shares/?api-version=2021-04-01"
+                        },
+                        "runAfter": {},
+                        "type": "Http"
+                    }
+                },
+                "foreach": "@body('Parse_storage_account_JSON')?['value']",
+                "runAfter": {
+                    "Parse_storage_account_JSON": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Foreach"
+            },
+            "HTTP": {
+                "inputs": {
+                    "authentication": {
+                        "audience": "https://management.azure.com",
+                        "clientId": "@body('AppId')?['value']",
+                        "secret": "@body('AppSecret')?['value']",
+                        "tenant": "@body('TentantId')?['value']",
+                        "type": "ActiveDirectoryOAuth"
+                    },
+                    "method": "GET",
+                    "uri": "https://management.azure.com/subscriptions/@{body('SubscriptionId')?['value']}/providers/Microsoft.Storage/storageAccounts?api-version=2021-04-01"
+                },
+                "runAfter": {
+                    "Initialize_variable": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Http"
+            },
+            "Initialize_variable": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "storageUsage",
+                            "type": "float",
+                            "value": 0
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "SubscriptionId": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Parse_storage_account_JSON": {
+                "inputs": {
+                    "content": "@body('HTTP')",
+                    "schema": {
+                        "properties": {
+                            "value": {
+                                "items": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "kind": {
+                                            "type": "string"
+                                        },
+                                        "location": {
+                                            "type": "string"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "properties": {
+                                            "properties": {
+                                                "azureFilesIdentityBasedAuthentication": {
+                                                    "properties": {
+                                                        "activeDirectoryProperties": {
+                                                            "properties": {
+                                                                "azureStorageSid": {
+                                                                    "type": "string"
+                                                                },
+                                                                "domainGuid": {
+                                                                    "type": "string"
+                                                                },
+                                                                "domainName": {
+                                                                    "type": "string"
+                                                                },
+                                                                "domainSid": {
+                                                                    "type": "string"
+                                                                },
+                                                                "forestName": {
+                                                                    "type": "string"
+                                                                },
+                                                                "netBiosDomainName": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "directoryServiceOptions": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "creationTime": {
+                                                    "type": "string"
+                                                },
+                                                "encryption": {
+                                                    "properties": {
+                                                        "keySource": {
+                                                            "type": "string"
+                                                        },
+                                                        "services": {
+                                                            "properties": {
+                                                                "blob": {
+                                                                    "properties": {
+                                                                        "enabled": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "keyType": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "lastEnabledTime": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                },
+                                                                "file": {
+                                                                    "properties": {
+                                                                        "enabled": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "keyType": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "lastEnabledTime": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "keyCreationTime": {
+                                                    "properties": {
+                                                        "key1": {
+                                                            "type": "string"
+                                                        },
+                                                        "key2": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "largeFileSharesState": {
+                                                    "type": "string"
+                                                },
+                                                "networkAcls": {
+                                                    "properties": {
+                                                        "bypass": {
+                                                            "type": "string"
+                                                        },
+                                                        "defaultAction": {
+                                                            "type": "string"
+                                                        },
+                                                        "ipRules": {
+                                                            "type": "array"
+                                                        },
+                                                        "virtualNetworkRules": {
+                                                            "type": "array"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "primaryEndpoints": {
+                                                    "properties": {
+                                                        "file": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "primaryLocation": {
+                                                    "type": "string"
+                                                },
+                                                "privateEndpointConnections": {
+                                                    "type": "array"
+                                                },
+                                                "provisioningState": {
+                                                    "type": "string"
+                                                },
+                                                "statusOfPrimary": {
+                                                    "type": "string"
+                                                },
+                                                "supportsHttpsTrafficOnly": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "sku": {
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "tier": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "tags": {
+                                            "properties": {},
+                                            "type": "object"
+                                        },
+                                        "type": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "sku",
+                                        "kind",
+                                        "id",
+                                        "name",
+                                        "type",
+                                        "location",
+                                        "tags",
+                                        "properties"
+                                    ],
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "runAfter": {
+                    "HTTP": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ParseJson"
+            },
+            "SubscriptionId": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['keyvault']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent('SubscriptionId')}/value"
+                },
+                "runAfter": {
+                    "TentantId": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
+            "TentantId": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['keyvault']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/secrets/@{encodeURIComponent('TenantId')}/value"
+                },
+                "runAfter": {
+                    "AppSecret": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "Recurrence": {
+                "evaluatedRecurrence": {
+                    "frequency": "Month",
+                    "interval": 5
+                },
+                "recurrence": {
+                    "frequency": "Month",
+                    "interval": 5
+                },
+                "type": "Recurrence"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "keyvault": {
+                    "connectionId": "/subscriptions/<subId>/resourceGroups/<rgGroup>/providers/Microsoft.Web/connections/keyvault",
+                    "connectionName": "keyvault",
+                    "id": "/subscriptions/<subId>/providers/Microsoft.Web/locations/westeurope/managedApis/keyvault"
+                }
+            }
+        }
+    }
+}
