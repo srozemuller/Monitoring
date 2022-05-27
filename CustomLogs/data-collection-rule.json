@@ -58,9 +58,9 @@
         }
     },
     "variables": {
-  "destinationName" : "[concat(split(parameters('workspaceResourceId'),'/'))[5]]",
-  "varTableName" :  "[concat('Custom-',parameters('tableName'))]"
-},
+        "destinationName": "[concat(split(parameters('workspaceResourceId'),'/'))[5]]",
+        "varTableName": "[concat('Custom-',parameters('tableName'))]"
+    },
     "resources": [
         {
             "type": "Microsoft.Insights/dataCollectionRules",
