@@ -33,7 +33,7 @@
             }
         },
         "tableColumns": {
-            "type": "array",
+            "type": "string",
             "metadata": {
                 "description": "Specifies the Azure resource ID of the Data Collection Endpoint to use."
             }
@@ -58,7 +58,7 @@
         }
     },
     "variables": {
-        "destinationName": "[concat(split(parameters('workspaceResourceId'),'/'))[5]]",
+        "destinationName": "[concat(split(parameters('workspaceResourceId'),'/'))[8]]",
         "varTableName": "[concat('Custom-',parameters('tableName'))]"
     },
     "resources": [
@@ -70,8 +70,44 @@
             "properties": {
                 "dataCollectionEndpointId": "[parameters('endpointResourceId')]",
                 "streamDeclarations": {
-                    "[parameters('streamName')]": {
-                        "columns": "[parameters('tableColumns')]"
+                    "Custom-new-stream": {
+                        "columns": [
+                            {
+                                "name": "Time",
+                                "type": "datetime",
+                                "description": "The time at which the data was generated"
+                            },
+                            {
+                                "name": "Id",
+                                "type": "string",
+                                "description": "The policys name"
+                            },
+                            {
+                                "name": "Title",
+                                "type": "string",
+                                "description": "The policys title"
+                            },
+                            {
+                                "name": "Service",
+                                "type": "string",
+                                "description": "The which service belongs the policy"
+                            },
+                            {
+                                "name": "State",
+                                "type": "string",
+                                "description": "The new state"
+                            },
+                            {
+                                "name": "UpdatedBy",
+                                "type": "string",
+                                "description": "Who did the update"
+                            },
+                            {
+                                "name": "UpdatedDateTime",
+                                "type": "datetime",
+                                "description": "When did the updated happend"
+                            }
+                        ]
                     }
                 },
                 "destinations": {
@@ -101,6 +137,10 @@
         "dataCollectionRuleId": {
             "type": "String",
             "value": "[resourceId('Microsoft.Insights/dataCollectionRules', parameters('dataCollectionRuleName'))]"
+        },
+        "immutableId": {
+            "type": "String",
+            "value": "[reference(resourceId('Microsoft.Insights/dataCollectionRules', parameters('dataCollectionRuleName'))).immutableId]"
         }
     }
 }
