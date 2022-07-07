@@ -1,0 +1,688 @@
+{
+
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "AzureUrl": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "AzureUrl",
+                            "type": "string",
+                            "value": "https://management.azure.com"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_variable": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "Compose": {
+                "inputs": "@body('Parse_from_alert_schema')?['data']?['alertContext']?['condition']?['allOf']?[0]?['dimensions']",
+                "runAfter": {
+                    "Parse_from_alert_schema": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Compose"
+            },
+            "Condition": {
+                "actions": {
+                    "Get_Sessionhost": {
+                        "inputs": {
+                            "authentication": {
+                                "audience": "@variables('AzureUrl')",
+                                "type": "ManagedServiceIdentity"
+                            },
+                            "method": "GET",
+                            "uri": "@{variables('AzureUrl')}@{variables('sessionHostId')}?api-version=2022-02-10-preview"
+                        },
+                        "runAfter": {},
+                        "type": "Http"
+                    },
+                    "HTTP": {
+                        "inputs": {
+                            "authentication": {
+                                "audience": "@variables('AzureUrl')",
+                                "type": "ManagedServiceIdentity"
+                            },
+                            "method": "POST",
+                            "uri": "@{variables('AzureUrl')}@{variables('SessionHostResourceId')}/restart?api-version=2022-03-01"
+                        },
+                        "runAfter": {
+                            "Send_restart_request": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "Http"
+                    },
+                    "Parse_SessionHost_Info": {
+                        "inputs": {
+                            "content": "@body('Get_Sessionhost')",
+                            "schema": {
+                                "properties": {
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "properties": {
+                                        "properties": {
+                                            "agentVersion": {
+                                                "type": "string"
+                                            },
+                                            "allowNewSession": {
+                                                "type": "boolean"
+                                            },
+                                            "assignedUser": {
+                                                "type": "string"
+                                            },
+                                            "friendlyName": {},
+                                            "lastHeartBeat": {
+                                                "type": "string"
+                                            },
+                                            "lastUpdateTime": {
+                                                "type": "string"
+                                            },
+                                            "objectId": {
+                                                "type": "string"
+                                            },
+                                            "osVersion": {
+                                                "type": "string"
+                                            },
+                                            "resourceId": {
+                                                "type": "string"
+                                            },
+                                            "sessionHostHealthCheckResults": {
+                                                "items": {
+                                                    "properties": {
+                                                        "additionalFailureDetails": {
+                                                            "properties": {
+                                                                "errorCode": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "lastHealthCheckDateTime": {
+                                                                    "type": "string"
+                                                                },
+                                                                "message": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        "healthCheckName": {
+                                                            "type": "string"
+                                                        },
+                                                        "healthCheckResult": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "healthCheckName",
+                                                        "healthCheckResult",
+                                                        "additionalFailureDetails"
+                                                    ],
+                                                    "type": "object"
+                                                },
+                                                "type": "array"
+                                            },
+                                            "sessions": {
+                                                "type": "integer"
+                                            },
+                                            "status": {
+                                                "type": "string"
+                                            },
+                                            "statusTimestamp": {
+                                                "type": "string"
+                                            },
+                                            "sxSStackVersion": {
+                                                "type": "string"
+                                            },
+                                            "updateErrorMessage": {
+                                                "type": "string"
+                                            },
+                                            "updateState": {
+                                                "type": "string"
+                                            },
+                                            "virtualMachineId": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "systemData": {
+                                        "properties": {
+                                            "createdAt": {
+                                                "type": "string"
+                                            },
+                                            "createdBy": {},
+                                            "createdByType": {},
+                                            "lastModifiedAt": {
+                                                "type": "string"
+                                            },
+                                            "lastModifiedBy": {
+                                                "type": "string"
+                                            },
+                                            "lastModifiedByType": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "type": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "runAfter": {
+                            "Get_Sessionhost": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ParseJson"
+                    },
+                    "Post_message_in_a_chat_or_channel": {
+                        "inputs": {
+                            "body": {
+                                "isAlert": true,
+                                "messageBody": "<p>Your sessionhost is restarted</p>",
+                                "recipient": "@variables('assignedUser')"
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['teams_1']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/beta/teams/conversation/message/poster/@{encodeURIComponent('Flow bot')}/location/@{encodeURIComponent('Chat with Flow bot')}"
+                        },
+                        "runAfter": {
+                            "HTTP": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ApiConnection"
+                    },
+                    "Send_restart_request": {
+                        "inputs": {
+                            "body": {
+                                "body": {
+                                    "messageBody": "{\n    \"type\": \"AdaptiveCard\",\n    \"body\": [\n        {\n            \"type\": \"TextBlock\",\n            \"size\": \"Medium\",\n            \"weight\": \"Bolder\",\n            \"text\": \"@{triggerBody()?['text']?['Title']}\"\n        },\n        {\n            \"type\": \"ColumnSet\",\n            \"columns\": [\n                {\n                    \"type\": \"Column\",\n                    \"items\": [\n                        {\n                            \"type\": \"Image\",\n                            \"url\": \"https://pbs.twimg.com/profile_images/1145617831905681408/XNKktHjN_400x400.png\",\n                            \"size\": \"Small\",\n                            \"style\": \"Person\"\n                        }\n                    ],\n                    \"width\": \"auto\"\n                },\n                {\n                    \"type\": \"Column\",\n                    \"items\": [\n                        {\n                            \"type\": \"TextBlock\",\n                            \"weight\": \"Bolder\",\n                            \"text\": \"@{triggerBody()?['account']?['name']}\",\n                            \"wrap\": true\n                        }\n                    ],\n                    \"width\": \"stretch\"\n                }\n            ]\n        },\n        {\n            \"type\": \"TextBlock\",\n            \"text\": \"@{triggerBody()?['text']?['Message']}\",\n            \"wrap\": true\n        },\n        {\n            \"type\": \"FactSet\",\n            \"facts\": [\n                {\n                    \"title\": \"VirtualMachineName\",\n                    \"value\": \"@{triggerBody()?['text']?['VmName']}\"\n                },\n                {\n                    \"title\": \"VMadminUsername\",\n                    \"value\": \"@{triggerBody()?['text']?['VmUserName']}\"\n                },\n                {\n                    \"title\": \"VMadminPassword\",\n                    \"value\": \"@{triggerBody()?['text']?['VmPassword']}\"\n                },\n                {\n                    \"title\": \"PublicIp\",\n                    \"value\": \"@{triggerBody()?['text']?['VmPublicIp']}\"\n                }\n            ]\n        },\n        {\n            \"type\": \"ActionSet\",\n            \"actions\": [\n                {\n                    \"type\": \"Action.Submit\",\n                    \"title\": \"OK\",\n                    \"id\": \"ok\",\n                    \"style\": \"positive\"\n                }\n            ]\n        }\n    ],\n    \"actions\": [  ],\n    \"$schema\": \"http://adaptivecards.io/schemas/adaptive-card.json\",\n    \"version\": \"1.3\"\n}",
+                                    "recipient": {
+                                        "to": "@variables('assignedUser')"
+                                    },
+                                    "updateMessage": "Thanks for your response!"
+                                },
+                                "notificationUrl": "@{listCallbackUrl()}"
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['teams_1']['connectionId']"
+                                }
+                            },
+                            "path": "/v1.0/teams/conversation/gatherinput/poster/Flow bot/location/@{encodeURIComponent('Chat with Flow bot')}/$subscriptions"
+                        },
+                        "runAfter": {
+                            "set_assignedUser": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ApiConnectionWebhook"
+                    },
+                    "set_assignedUser": {
+                        "inputs": {
+                            "name": "assignedUser",
+                            "value": "@{body('Parse_SessionHost_Info')?['properties']?['assignedUser']}"
+                        },
+                        "runAfter": {
+                            "Parse_SessionHost_Info": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "SetVariable"
+                    }
+                },
+                "expression": {
+                    "and": [
+                        {
+                            "not": {
+                                "equals": [
+                                    "@variables('vmStatus')",
+                                    "PowerState/deallocated"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "vmStatus": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "If"
+            },
+            "GetVMStatus": {
+                "inputs": {
+                    "authentication": {
+                        "audience": "@variables('AzureUrl')",
+                        "type": "ManagedServiceIdentity"
+                    },
+                    "method": "GET",
+                    "uri": "@{variables('AzureUrl')}@{variables('SessionHostResourceId')}/instanceView?api-version=2022-03-01"
+                },
+                "runAfter": {
+                    "sessionHostId": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Http"
+            },
+            "Initialize_variable": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "assignedUser",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "runAfter": {},
+                "type": "InitializeVariable"
+            },
+            "Parse_VM_Status": {
+                "inputs": {
+                    "content": "@body('GetVMStatus')",
+                    "schema": {
+                        "properties": {
+                            "assignedHost": {
+                                "type": "string"
+                            },
+                            "computerName": {
+                                "type": "string"
+                            },
+                            "disks": {
+                                "items": {
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "statuses": {
+                                            "items": {
+                                                "properties": {
+                                                    "code": {
+                                                        "type": "string"
+                                                    },
+                                                    "displayStatus": {
+                                                        "type": "string"
+                                                    },
+                                                    "level": {
+                                                        "type": "string"
+                                                    },
+                                                    "time": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "code",
+                                                    "level",
+                                                    "displayStatus",
+                                                    "time"
+                                                ],
+                                                "type": "object"
+                                            },
+                                            "type": "array"
+                                        }
+                                    },
+                                    "required": [
+                                        "name",
+                                        "statuses"
+                                    ],
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            },
+                            "hyperVGeneration": {
+                                "type": "string"
+                            },
+                            "osName": {
+                                "type": "string"
+                            },
+                            "osVersion": {
+                                "type": "string"
+                            },
+                            "statuses": {
+                                "items": {
+                                    "properties": {
+                                        "code": {
+                                            "type": "string"
+                                        },
+                                        "displayStatus": {
+                                            "type": "string"
+                                        },
+                                        "level": {
+                                            "type": "string"
+                                        },
+                                        "time": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "code",
+                                        "level",
+                                        "displayStatus"
+                                    ],
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            },
+                            "vmAgent": {
+                                "properties": {
+                                    "statuses": {
+                                        "items": {
+                                            "properties": {
+                                                "code": {
+                                                    "type": "string"
+                                                },
+                                                "displayStatus": {
+                                                    "type": "string"
+                                                },
+                                                "level": {
+                                                    "type": "string"
+                                                },
+                                                "message": {
+                                                    "type": "string"
+                                                },
+                                                "time": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "code",
+                                                "level",
+                                                "displayStatus",
+                                                "message",
+                                                "time"
+                                            ],
+                                            "type": "object"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "vmAgentVersion": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "runAfter": {
+                    "GetVMStatus": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ParseJson"
+            },
+            "Parse_from_alert_schema": {
+                "inputs": {
+                    "content": "@triggerBody()",
+                    "schema": {
+                        "properties": {
+                            "content": {
+                                "properties": {
+                                    "data": {
+                                        "properties": {
+                                            "alertContext": {
+                                                "properties": {
+                                                    "condition": {
+                                                        "properties": {
+                                                            "allOf": {
+                                                                "items": {
+                                                                    "properties": {
+                                                                        "dimensions": {
+                                                                            "items": {
+                                                                                "properties": {
+                                                                                    "name": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "value": {
+                                                                                        "type": "string"
+                                                                                    }
+                                                                                },
+                                                                                "required": [
+                                                                                    "name",
+                                                                                    "value"
+                                                                                ],
+                                                                                "type": "object"
+                                                                            },
+                                                                            "type": "array"
+                                                                        },
+                                                                        "failingPeriods": {
+                                                                            "properties": {
+                                                                                "minFailingPeriodsToAlert": {
+                                                                                    "type": "integer"
+                                                                                },
+                                                                                "numberOfEvaluationPeriods": {
+                                                                                    "type": "integer"
+                                                                                }
+                                                                            },
+                                                                            "type": "object"
+                                                                        },
+                                                                        "linkToFilteredSearchResultsAPI": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "linkToFilteredSearchResultsUI": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "linkToSearchResultsAPI": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "linkToSearchResultsUI": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "metricMeasureColumn": {},
+                                                                        "metricValue": {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        "operator": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "searchQuery": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "targetResourceTypes": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "threshold": {
+                                                                            "type": "string"
+                                                                        },
+                                                                        "timeAggregation": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "searchQuery",
+                                                                        "metricMeasureColumn",
+                                                                        "targetResourceTypes",
+                                                                        "operator",
+                                                                        "threshold",
+                                                                        "timeAggregation",
+                                                                        "dimensions",
+                                                                        "metricValue",
+                                                                        "failingPeriods",
+                                                                        "linkToSearchResultsUI",
+                                                                        "linkToFilteredSearchResultsUI",
+                                                                        "linkToSearchResultsAPI",
+                                                                        "linkToFilteredSearchResultsAPI"
+                                                                    ],
+                                                                    "type": "object"
+                                                                },
+                                                                "type": "array"
+                                                            },
+                                                            "windowEndTime": {
+                                                                "type": "string"
+                                                            },
+                                                            "windowSize": {
+                                                                "type": "string"
+                                                            },
+                                                            "windowStartTime": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "conditionType": {
+                                                        "type": "string"
+                                                    },
+                                                    "properties": {
+                                                        "properties": {},
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            },
+                                            "customProperties": {},
+                                            "essentials": {
+                                                "properties": {
+                                                    "alertContextVersion": {
+                                                        "type": "string"
+                                                    },
+                                                    "alertId": {
+                                                        "type": "string"
+                                                    },
+                                                    "alertRule": {
+                                                        "type": "string"
+                                                    },
+                                                    "alertTargetIDs": {
+                                                        "items": {
+                                                            "type": "string"
+                                                        },
+                                                        "type": "array"
+                                                    },
+                                                    "configurationItems": {
+                                                        "items": {
+                                                            "type": "string"
+                                                        },
+                                                        "type": "array"
+                                                    },
+                                                    "description": {
+                                                        "type": "string"
+                                                    },
+                                                    "essentialsVersion": {
+                                                        "type": "string"
+                                                    },
+                                                    "firedDateTime": {
+                                                        "type": "string"
+                                                    },
+                                                    "monitorCondition": {
+                                                        "type": "string"
+                                                    },
+                                                    "monitoringService": {
+                                                        "type": "string"
+                                                    },
+                                                    "originAlertId": {
+                                                        "type": "string"
+                                                    },
+                                                    "severity": {
+                                                        "type": "string"
+                                                    },
+                                                    "signalType": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "schemaId": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "runAfter": {
+                    "AzureUrl": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ParseJson"
+            },
+            "SessionHostResourceId": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "SessionHostResourceId",
+                            "type": "string",
+                            "value": "@{outputs('Compose')?[3]?['value']}"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Compose": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "sessionHostId": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "sessionHostId",
+                            "type": "string",
+                            "value": "@{outputs('Compose')?[1]?['value']}"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "SessionHostResourceId": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "vmStatus": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "vmStatus",
+                            "type": "string",
+                            "value": "@{body('Parse_VM_Status')?['statuses'][1]['code']}"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Parse_VM_Status": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "manual": {
+                "inputs": {},
+                "kind": "Http",
+                "type": "Request"
+            }
+        }
+}
