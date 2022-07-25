@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2022-07-25T20:15:49.635Z" agent="5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36" etag="-0eOGn3nykwYeLtHdpp8" version="20.1.1" type="github">
+<mxfile host="app.diagrams.net" modified="2022-07-25T20:32:36.239Z" agent="5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36" etag="gYcRZaJ9ca-e4zyoQL4h" version="20.1.1" type="github">
   <diagram id="cC7d9xYDan5VczWLLXz7" name="Page-1">
-    <mxGraphModel dx="1273" dy="776" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="2036" dy="1242" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -165,6 +165,15 @@
         </mxCell>
         <mxCell id="xBk15x28PZucqisckixE-81" value="Information / alerts" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=30;fontFamily=Architects Daughter;" vertex="1" parent="1">
           <mxGeometry x="1150" y="505" width="300" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="xBk15x28PZucqisckixE-82" value="" style="aspect=fixed;html=1;points=[];align=center;image;fontSize=12;image=img/lib/azure2/integration/Event_Grid_Topics.svg;dashed=1;fontFamily=Architects Daughter;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DArchitects%2BDaughter;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="610" width="67" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="xBk15x28PZucqisckixE-83" value="EventGrid" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=30;fontFamily=Architects Daughter;" vertex="1" parent="1">
+          <mxGeometry x="1303.5" y="696.12" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="xBk15x28PZucqisckixE-84" value="MS TEAMS" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=30;fontFamily=Architects Daughter;" vertex="1" parent="1">
+          <mxGeometry x="160" y="695" width="180" height="50" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
