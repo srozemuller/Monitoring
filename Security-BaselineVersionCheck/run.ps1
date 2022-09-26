@@ -6,36 +6,23 @@ $currentTime = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId( (Get-Date),
 $informationPreference = 'Continue'
 $checkDate = (Get-Date).AddDays($env:backInDays)
 
-# The 'IsPastDue' property is 'true' when the current function invocation is later than scheduled.
-if ($Timer.IsPastDue) {
-    Write-Host "PowerShell timer is running late!"
-}
-
 # Write an information log with the current time.
-Write-Host "PowerShell timer trigger function ran! TIME: $currentTime"
+Write-Output "PowerShell timer trigger function ran! TIME: $currentTime"
+
 
 try {
-    if ($env:MSI_SECRET) {
-        $azureAccount = Connect-AzAccount -Identity
-        Write-Host "Is Managed Identity"
-    }
-    else {
-        Write-Host "Function app is not a managed identity. Using app registration"
-        $passwd = ConvertTo-SecureString $env:AppSecret -AsPlainText -Force
-        $pscredential = New-Object System.Management.Automation.PSCredential($env:AppId, $passwd)
-        $azureAccount = Connect-AzAccount -ServicePrincipal -Credential $pscredential
-    }
-    $accessToken = Get-AzAccessToken -ResourceUrl $env:graphApiUrl -DefaultProfile $azureAccount
+    import-module .\Modules\mem-monitor-functions.psm1
 }
 catch {
-    Write-error "Azure login failed with error: $($_.Exception.Message)"
-} 
-
-$authHeader = @{
-    'Content-Type' = 'application/json'
-    Authorization  = 'Bearer {0}' -f $accessToken.Token
+    Write-Error "Functions module not found!"
+    exit;
 }
-$getUrl = "https://graph.microsoft.com/beta/deviceManagement/templates?$filter=(templateType%20eq%20'securityBaseline')%20or%20(templateType%20eq%20'advancedThreatProtectionSecurityBaseline')%20or%20(templateType%20eq%20'microsoftEdgeSecurityBaseline')%20or%20(templateType%20eq%20'cloudPC')"
+
+
+$env:graphApiUrl = "https://graph.microsoft.com"
+Get-AuthApiToken -resource $env:graphApiUrl
+
+$getUrl = "{0}/beta/deviceManagement/templates?$filter=(templateType%20eq%20'securityBaseline')%20or%20(templateType%20eq%20'advancedThreatProtectionSecurityBaseline')%20or%20(templateType%20eq%20'microsoftEdgeSecurityBaseline')%20or%20(templateType%20eq%20'cloudPC')" -f $env:graphApiUrl
 try {
     Write-Information "Searching for security baselines"
     $results = Invoke-RestMethod -URI $getUrl -Method GET -Headers $authHeader
