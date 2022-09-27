@@ -5,11 +5,10 @@ param($Timer)
 $currentTime = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId( (Get-Date), 'W. Europe Standard Time').ToString('yyyy-MM-dd HH:mm:ss')
 $informationPreference = 'Continue'
 $checkDate = (Get-Date).AddDays($env:backInDays)
+$env:graphApiUrl = "https://graph.microsoft.com"
 
 # Write an information log with the current time.
 Write-Output "PowerShell timer trigger function ran! TIME: $currentTime"
-
-
 try {
     import-module .\Modules\mem-monitor-functions.psm1
 }
@@ -17,19 +16,22 @@ catch {
     Write-Error "Functions module not found!"
     exit;
 }
+try {
+    Get-AuthApiToken -resource $env:graphApiUrl
+}
+catch {
+    Throw "No token received, $_"
+}
 
-
-$env:graphApiUrl = "https://graph.microsoft.com"
-Get-AuthApiToken -resource $env:graphApiUrl
-
-$getUrl = "{0}/beta/deviceManagement/templates?$filter=(templateType%20eq%20'securityBaseline')%20or%20(templateType%20eq%20'advancedThreatProtectionSecurityBaseline')%20or%20(templateType%20eq%20'microsoftEdgeSecurityBaseline')%20or%20(templateType%20eq%20'cloudPC')" -f $env:graphApiUrl
 try {
     Write-Information "Searching for security baselines"
+    $getUrl = "{0}/beta/deviceManagement/templates?$filter=(templateType%20eq%20'securityBaseline')%20or%20(templateType%20eq%20'advancedThreatProtectionSecurityBaseline')%20or%20(templateType%20eq%20'microsoftEdgeSecurityBaseline')%20or%20(templateType%20eq%20'cloudPC')" -f $env:graphApiUrl
     $results = Invoke-RestMethod -URI $getUrl -Method GET -Headers $authHeader
 }
 catch {
     Write-Error "Unable to request for security baselines, $_"
 }
+
 if ($results.value.length -gt 0) {
     try {
         $results.value | ForEach-Object {
