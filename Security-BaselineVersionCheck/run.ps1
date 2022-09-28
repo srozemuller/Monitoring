@@ -37,6 +37,7 @@ if ($results.value.length -gt 0) {
         $results.value | ForEach-Object {
             if (($_.IntentCount -gt 0) -and ($_.PublishedDateTime -gt $checkDate) ) {
                 Write-Warning "Security Baseline $($_.DisplayName) has a new version published at $($_.PublishedDateTime)"
+                Send-AlertToAdmin -Title "Security Baseline" -SubTitle "New version available" -Description "New version with date $(Get-Date)"
             }
             else {
                 Write-Information "Security Baseline $($_.DisplayName) is most recent version"
