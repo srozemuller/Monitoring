@@ -17,7 +17,7 @@ catch {
     exit;
 }
 try {
-    Get-AuthApiToken -resource $env:graphApiUrl
+    $authHeader = Get-AuthApiToken -resource $env:graphApiUrl
 }
 catch {
     Throw "No token received, $_"

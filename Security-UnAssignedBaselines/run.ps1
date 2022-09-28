@@ -15,29 +15,22 @@ if ($Timer.IsPastDue) {
 Write-Host "PowerShell timer trigger function ran! TIME: $currentTime"
 
 try {
-    if ($env:MSI_SECRET) {
-        $azureAccount = Connect-AzAccount -Identity
-        Write-Host "Is Managed Identity"
-    }
-    else {
-        Write-Host "Function app is not a managed identity. Using app registration"
-        $passwd = ConvertTo-SecureString $env:AppSecret -AsPlainText -Force
-        $pscredential = New-Object System.Management.Automation.PSCredential($env:AppId, $passwd)
-        $azureAccount = Connect-AzAccount -ServicePrincipal -Credential $pscredential
-    }
-    $accessToken = Get-AzAccessToken -ResourceUrl $env:graphApiUrl -DefaultProfile $azureAccount
+    import-module .\Modules\mem-monitor-functions.psm1
 }
 catch {
-    Write-error "Azure login failed with error: $($_.Exception.Message)"
-} 
-
-$authHeader = @{
-    'Content-Type' = 'application/json'
-    Authorization  = 'Bearer {0}' -f $accessToken.Token
+    Write-Error "Functions module not found!"
+    exit;
 }
-$getUrl = "https://graph.microsoft.com/beta/deviceManagement/intents?`$filter=contains(displayName,'baseline')%20or%20contains(displayName,'Baseline')"
+try {
+    $authHeader = Get-AuthApiToken -resource $env:graphApiUrl
+}
+catch {
+    Throw "No token received, $_"
+}
+
 try {
     Write-Information "Searching for security baselines"
+    $getUrl = "https://graph.microsoft.com/beta/deviceManagement/intents?`$filter=contains(displayName,'baseline')%20or%20contains(displayName,'Baseline')"
     $results = Invoke-RestMethod -URI $getUrl -Method GET -Headers $authHeader
 }
 catch {
@@ -50,7 +43,7 @@ if ($results.value -gt 0) {
                 Write-Information "$($_.DisplayName) is assigned"
             }
             else {
-                Write-Error "Security Baseline profile not in use: $($_.DisplayName)"
+                Send-AlertToAdmin -Title "Security Baseline" -SubTitle "Profile not in use" -Description $($_.DisplayName)
             }
         }
     }
