@@ -1,0 +1,210 @@
+{
+    "GetRefreshToken": {
+      "runAfter": {
+        "RefreshTokenLocationUrl": [
+          "Succeeded"
+        ]
+      },
+      "type": "Http",
+      "inputs": {
+        "authentication": {
+          "audience": "https://vault.azure.net",
+          "type": "ManagedServiceIdentity"
+        },
+        "method": "GET",
+        "uri": "@variables('RefreshTokenLocationUrl')"
+      }
+    },
+    "HTTP": {
+      "runAfter": {
+        "SetNewRefreshToken": [
+          "Succeeded"
+        ]
+      },
+      "type": "Http",
+      "inputs": {
+        "headers": {
+          "Authorization": "Bearer @{body('ParseJsonFromLogin')?['access_token']}",
+          "Content-type": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          "x-ms-client-request-id": "@{guid()}",
+          "x-ms-correlation-id": "@{guid()}"
+        },
+        "method": "GET",
+        "uri": "https://main.iam.ad.ext.azure.com/api/AccountSkus?backfillTenants=true"
+      }
+    },
+    "Login": {
+      "runAfter": {
+        "ParseJSONFromRefreshToken": [
+          "Succeeded"
+        ]
+      },
+      "type": "Http",
+      "inputs": {
+        "body": "resource=74658136-14ec-4630-ad9b-26e160ff0fc6&grant_type=refresh_token&refresh_token=@{body('ParseJSONFromRefreshToken')?['value']}&client_id=1950a258-227b-4e31-a9cf-717495945fc2&scope=openid",
+        "headers": {
+          "content-type": "application/x-www-form-urlencoded"
+        },
+        "method": "POST",
+        "uri": "https://login.windows.net/@{variables('tenantId')}/oauth2/token"
+      }
+    },
+    "ParseJSONFromRefreshToken": {
+      "runAfter": {
+        "GetRefreshToken": [
+          "Succeeded"
+        ]
+      },
+      "type": "ParseJson",
+      "inputs": {
+        "content": "@body('GetRefreshToken')",
+        "schema": {
+          "properties": {
+            "attributes": {
+              "properties": {
+                "created": {
+                  "type": "integer"
+                },
+                "enabled": {
+                  "type": "boolean"
+                },
+                "recoverableDays": {
+                  "type": "integer"
+                },
+                "recoveryLevel": {
+                  "type": "string"
+                },
+                "updated": {
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            },
+            "id": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      }
+    },
+    "ParseJsonFromLogin": {
+      "runAfter": {
+        "Login": [
+          "Succeeded"
+        ]
+      },
+      "type": "ParseJson",
+      "inputs": {
+        "content": "@body('Login')",
+        "schema": {
+          "properties": {
+            "access_token": {
+              "type": "string"
+            },
+            "expires_in": {
+              "type": "string"
+            },
+            "expires_on": {
+              "type": "string"
+            },
+            "ext_expires_in": {
+              "type": "string"
+            },
+            "foci": {
+              "type": "string"
+            },
+            "id_token": {
+              "type": "string"
+            },
+            "not_before": {
+              "type": "string"
+            },
+            "refresh_token": {
+              "type": "string"
+            },
+            "resource": {
+              "type": "string"
+            },
+            "scope": {
+              "type": "string"
+            },
+            "token_type": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      }
+    },
+    "RefreshTokenLocationUrl": {
+      "runAfter": {
+        "tenantId": [
+          "Succeeded"
+        ]
+      },
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "RefreshTokenLocationUrl",
+            "type": "string",
+            "value": "$($kvRefeshTokenSecret)"
+          }
+        ]
+      }
+    },
+    "SetNewRefreshToken": {
+      "runAfter": {
+        "ParseJsonFromLogin": [
+          "Succeeded"
+        ]
+      },
+      "type": "Http",
+      "inputs": {
+        "authentication": {
+          "audience": "https://vault.azure.net",
+          "type": "ManagedServiceIdentity"
+        },
+        "body": {
+          "value": "@{body('ParseJsonFromLogin')?['refresh_token']}"
+        },
+        "method": "PUT",
+        "uri": "@variables('RefreshTokenLocationUrl')"
+      }
+    },
+    "azureApiMainUrl": {
+      "runAfter": {},
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "azureApiMainUrl",
+            "type": "string",
+            "value": "https://management.azure.com"
+          }
+        ]
+      }
+    },
+    "tenantId": {
+      "runAfter": {
+        "azureApiMainUrl": [
+          "Succeeded"
+        ]
+      },
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "tenantId",
+            "type": "string",
+            "value": "$($tenantId)"
+          }
+        ]
+      }
+    }
+  }
