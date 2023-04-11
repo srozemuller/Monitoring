@@ -9,8 +9,8 @@ if ($Timer.IsPastDue) {
     Write-Host "PowerShell timer is running late!"
 }
 $graphUrl = "https://graph.microsoft.com"
-# $monitorResource = "https://monitor.azure.com//.default"
-# $azureAccount = Connect-AzAccount -Identity
+$monitorResource = "https://monitor.azure.com//.default"
+Connect-AzAccount -Identity
 
 $allobjects = [System.Collections.ArrayList]@()
 
