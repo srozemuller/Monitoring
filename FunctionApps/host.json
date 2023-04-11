@@ -1,31 +1,11 @@
 {
   "version": "2.0",
-  "functionTimeout": "06:29:59",
+  "functionTimeout": "00:09:59",
   "managedDependency": {
-    "enabled": true
+    "Enabled": true
   },
   "extensionBundle": {
     "id": "Microsoft.Azure.Functions.ExtensionBundle",
     "version": "[3.*, 4.0.0)"
-  },
-  "extensions": {
-    "queues": {
-      "maxPollingInterval": "00:01:00",
-      "visibilityTimeout": "00:00:30",
-      "batchSize": 5,
-      "maxDequeueCount": 5,
-      "newBatchThreshold": 5,
-      "messageEncoding": "base64"
-    },
-    "durableTask": {
-      "maxConcurrentActivityFunctions": 5,
-      "maxConcurrentOrchestratorFunctions": 5
-    }
-  },
-  "logging": {
-    "logLevel": {
-      "default": "Warning",
-      "Function.Update-RefreshToken": "Trace"
-    }
   }
 }
