@@ -6,7 +6,7 @@ name: Build and deploy Powershell project to Azure Function App - membeermonitor
 on:
   push:
     branches:
-      - main
+
   workflow_dispatch:
 
 env:
