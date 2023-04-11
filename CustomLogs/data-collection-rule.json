@@ -32,12 +32,6 @@
                 "description": "Specifies the Azure resource ID of the Data Collection Endpoint to use."
             }
         },
-        "tableColumns": {
-            "type": "string",
-            "metadata": {
-                "description": "Specifies the Azure resource ID of the Data Collection Endpoint to use."
-            }
-        },
         "streamName": {
             "type": "string",
             "metadata": {
@@ -78,12 +72,12 @@
                                 "description": "The time at which the data was generated"
                             },
                             {
-                                "name": "Id",
+                                "name": "PolicyId",
                                 "type": "string",
                                 "description": "The policys name"
                             },
                             {
-                                "name": "Title",
+                                "name": "PolicyTitle",
                                 "type": "string",
                                 "description": "The policys title"
                             },
