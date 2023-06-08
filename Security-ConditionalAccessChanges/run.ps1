@@ -8,5 +8,6 @@ $currentUTCtime = (Get-Date).ToUniversalTime()
 if ($Timer.IsPastDue) {
     Write-Host "PowerShell timer is running late!"
 }
-
-$Request
+"Request output"
+$Request | ConvertFrom-Json
+($Request | ConvertFrom-Json).data
