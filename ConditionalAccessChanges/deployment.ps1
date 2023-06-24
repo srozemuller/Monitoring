@@ -218,3 +218,46 @@ $actionGroupBody = @{
     }
 } | ConvertTo-Json -Depth 5
 Invoke-RestMethod -Uri $actionGroupUri -Method PUT -Headers $authHeader -Body $actionGroupBody
+
+
+$alertRuleName = "Conditional Access Policy Changed"
+$alertRuleUri = "https://management.azure.com/subscriptions/{0}/resourceGroups/{1}/providers/microsoft.insights/scheduledqueryrules/{2}?api-version=2023-03-15-preview" -f $subscriptionId, $resourceGroup, $alertRuleName
+$alertRuleBody = @{
+    location   = "West Europe"
+    properties = @{
+        displayName         = $alertRuleName
+        actions             = @{
+            actionGroups = @(
+                $actionGroup.id
+            )
+        }
+        criteria            = @{
+            allOf = @(
+                @{
+                    operator        = "GreaterThanOrEqual"
+                    query           = "AuditLogs | where OperationName == 'Update conditional access policy' | extend oldValue=parse_json(TargetResources[0].modifiedProperties[0].oldValue) | extend newValue=parse_json(TargetResources[0].modifiedProperties[0].newValue) | project TimeGenerated, OperationName, InitiatedBy, oldValue, newValue"
+                    threshold       = 1
+                    timeAggregation = "Count"
+                    dimensions      = @()
+                    failingPeriods  = @{
+                        minFailingPeriodsToAlert  = 1
+                        numberOfEvaluationPeriods = 1
+                    }
+                }
+            )
+        }
+        description         = "This rule checks for conditional access policy changes every 15 minutes"
+        enabled             = $true
+        autoMitigate        = $false
+        evaluationFrequency = "PT15M"
+        scopes              = @(
+            $laResponse.id
+        )
+        severity            = 2
+        windowSize          = "PT15M"
+        targetResourceTypes = @(
+            "Microsoft.OperationalInsights/workspaces"
+        )
+    }
+} | ConvertTo-Json -Depth 8
+Invoke-RestMethod -Uri $alertRuleUri -Method PUT -Headers $authHeader -Body $alertRuleBody
