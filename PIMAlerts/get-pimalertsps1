@@ -1,0 +1,47 @@
+# For more information check blog: https://rozemuller.com/monitor-assigned-roles-outside-pim-and-sent-to-ms-teams-using-openai
+# Variables that are needed
+$env:openAIKey = "xxxx"
+$env:teamsUrl = "https://xxx.webhook.office.com/webhookb2/{0}/IncomingWebhook/4f9b7d66add2459480eb2ffb8205c269/{1}"
+$env:openAIUrl = "https://{openAIResource}.openai.azure.com/openai/deployments/{deployments}/completions?api-version=2022-12-01"
+$openAIHeader = @{
+    'api-key'      = $env:openAIKey
+    'Content-Type' = "application/json"
+}
+$tenantId = {guid}
+
+# Request the PIM alerts
+$url = "https://api.azrbac.mspim.azure.com/api/v2/privilegedAccess/aadroles/resources/{0}/alerts/RolesAssignedOutsidePimAlert" -f $tenantId
+$value = Invoke-RestMethod -uri $url -Method GET -Headers $graphHeader
+$result = $value | ConvertTo-Json -Depth 99 -Compress
+
+# Body for OpenAI with the question and some other parameters
+$body = @"
+{
+        "prompt": "Generate a well formatted Microsoft Teams adaptive card. The body in de card must contain a list from the additionalData array. Items in the array must be formatted as a list in the card body. The list must contain, per item, the following objects: AssigneeDisplayName, AssigneeUserPrincipalName, RoleDisplayName and AssignmentActivatedDate. Every object name must start in bold text, the value is a normal font. Surround every object with **. The value must contain the value from the JSON content below. Please use the alert name as the card title.  \" $($($result).Replace('"',"'")) \" ",
+        "temperature": 0,
+        "top_p": 0.1,
+        "frequency_penalty": 0,
+        "presence_penalty": 0,
+        "max_tokens": 2000,
+        "stop": null
+}
+"@
+$openAIResponse = Invoke-RestMethod -Method post -uri $env:openAIUrl -Headers $openAIHeader -Body $body
+
+# Create a MS Teams card body with the response from OpenAI
+$cardBody = @"
+{
+   "type": "message",
+   "attachments": [
+       {
+           "contentType": "application/vnd.microsoft.card.adaptive",
+           "contentUrl": null,
+           "content": $($openAIResponse.choices.text),
+           "msteams": {
+               "width": "Full"
+           }
+       }
+   ]
+}
+"@
+Invoke-RestMethod -Method post -uri $env:teamsUrl -body $cardBody -ContentType 'application/json'
