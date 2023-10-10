@@ -1,5 +1,5 @@
 # Input bindings are passed in via param block.
-param($Request)
+param($Timer)
 
 # The 'IsPastDue' property is 'true' when the current function invocation is later than scheduled.
 if ($Timer.IsPastDue) {
