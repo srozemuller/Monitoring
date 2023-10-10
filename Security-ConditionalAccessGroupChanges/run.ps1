@@ -63,6 +63,9 @@ $graphHeaders = @{
 
 if (Test-Path $deltaFile) {
     $deltaUrl = Get-Content $deltaFile
+    if ($null -eq $deltaUrl){
+        Get-DeltaResults -deltaUrl "{0}/beta/groups/delta?`$deltatoken=latest" -f $graphUrl
+    }
     $deltas = Get-DeltaResults -deltaUrl $deltaUrl
 }
 else {
