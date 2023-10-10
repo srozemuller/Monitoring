@@ -111,7 +111,7 @@ if ($deltas) {
                 'roles'           = $roles
             }
             $aiInfo = Get-InfoFromAI -content $memberObject
-            $aiInfo.choices[0].message
+            $aiInfo
         }
     }
 
