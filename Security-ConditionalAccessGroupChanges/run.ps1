@@ -54,8 +54,7 @@ $headers = @{"X-IDENTITY-HEADER" = $env:IDENTITY_HEADER }
 $ProgressPreference = "SilentlyContinue"
 $graphUrl = "https://graph.microsoft.com"
 $deltaFile = '.\deltaurl.txt'
-$response = Invoke-WebRequest -UseBasicParsing -Uri $graphUrl -Headers $headers
-$token = ($response.Content | Convertfrom-json).access_token
+$token = (Get-AzAccessToken -ResourceUrl "https://graph.microsoft.com/")
 $graphHeaders = @{
     'Content-Type' = 'application/json'
     Authorization  = "Bearer {0}" -f $token.token
