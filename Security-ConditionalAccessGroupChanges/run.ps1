@@ -77,6 +77,7 @@ else {
 }
 
 if ($deltas) {
+    Write-Warning "Found deltas, $($deltas)"
     $deltas | ForEach-Object {
         $members = $_.'members@delta'
         $members | ForEach-Object {
