@@ -27,7 +27,7 @@ function Get-InfoFromAI {
         "messages":  [
             {
                 "role": "user",
-                "content": "based on the json content give me the second highest os version under the devices object and the current defined Os version. Then tell me if the current defined Os version matches the second highest os version. If not, then tell me what the defined Os version should be. surround the defined OS version with <>. Give me the policy name that is updated $($($content).Replace('"','\"'))"
+                "content": "Based on the json content give me the second highest os version under the devices object and the current defined Os version. Then tell me if the current defined Os version matches the second highest os version. If not, then tell me what the defined Os version should be. surround the defined OS version with <>. Give me the policy name that is updated $($($content).Replace('"','\"'))"
             }
         ]
         }
@@ -132,7 +132,7 @@ if ($null -ne $compliancePolicies) {
             $compliancePolicy.osMinimumVersion = (Select-String -Pattern '(?<=\<)(.*?)(?=\>)' -InputObject $aiInfo.choices[0].message.content).Matches.Value
             $compliancePolicy.PSObject.Properties.Remove('assignments')
             $compliancePoliciesUrl = "{0}/beta/deviceManagement/deviceCompliancePolicies/{1}" -f $graphUrl, $compliancePolicyAndDevices.policy
-            888888888888888888Invoke-WebRequest -Uri $compliancePoliciesUrl -Method PATCH -Headers $graphHeaders -Body ($compliancePolicy | ConvertTo-Json -Depth 10)
+            Invoke-WebRequest -Uri $compliancePoliciesUrl -Method PATCH -Headers $graphHeaders -Body ($compliancePolicy | ConvertTo-Json -Depth 10)
 
             $policyInfo = [PSCustomObject]@{
                 policy           = $_.id
