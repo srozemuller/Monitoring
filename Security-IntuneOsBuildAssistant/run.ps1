@@ -18,8 +18,8 @@ function Get-InfoFromAI {
     }
     $body = @"
 {
-        "temperature": 0.7,
-        "top_p": 0.95,
+        "temperature": 0.1,
+        "top_p": 0,
         "frequency_penalty": 0,
         "presence_penalty": 0,
         "max_tokens": 1000,
@@ -27,7 +27,7 @@ function Get-InfoFromAI {
         "messages":  [
             {
                 "role": "user",
-                "content": "Based on the json content give me the second highest os version under the devices object and the current defined Os version. Then tell me if the current defined Os version matches the second highest os version. If not, then tell me what the defined Os version should be. surround the defined OS version with <>. Give me the policy name that is updated $($($content).Replace('"','\"'))"
+                "content": "Based on the json content give me the the currentVersions array, order it ascending and pick the second highest. Tell me if the current osMinimumVersion matches the second highest os version from the array. If not, then tell me what the defined Os version should be. Surround the defined OS version with <> and which policy should be updated. Always return the compliancePolicyName. $($($content).Replace('"','\"'))"
             }
         ]
         }
@@ -48,51 +48,46 @@ $graphHeaders = @{
     Authorization  = "Bearer {0}" -f $token.token
 }
 
-function Get-ActiveAssignedFilters {
+function Get-MachinesPerFilters {
     [CmdletBinding()]
     param (
         [Parameter()]
-        [string]$IntuneDeviceId,
-
-        [Parameter()]
         [string]$FilterId
     )
-    $activeFiltersPerDevice = [System.Collections.ArrayList]::new()
+    $activeDevicesPerFilter = [System.Collections.ArrayList]::new()
     # Get the assigned user ID from the device
-    $usersUrl = "{0}/beta//deviceManagement/managedDevices/{1}/users" -f $graphUrl, $device.id
-    $user = (Invoke-WebRequest -Uri $usersUrl -Method Get -Headers $graphHeaders | ConvertFrom-Json).value
-    $requestParams = @{
-        uri     = "{0}/beta/deviceManagement/assignmentFilters('{1}')/payloads" -f $graphUrl, $FilterId
+    $filterReqParams = @{
+        uri     = "{0}/beta/deviceManagement/assignmentFilters('{1}')" -f $graphUrl, $FilterId
         method  = "GET"
         headers = $graphHeaders
     }
-    $assignedFilters = (Invoke-WebRequest @requestParams | ConvertFrom-Json).value
-    $assignedFilters | Where-Object { $_.payloadType -eq 'deviceConfigurationAndCompliance' } | ForEach-Object {
-        $payLoadId = $_.payloadId
-        $payLoadId
-        $filterCheckBody = @{
-            "managedDeviceId" = $IntuneDeviceId
-            "payloadId"       = $payLoadId # Based on the returned JSON, this is the PolicyId
-            "userId"          = $user.id
-        }
-        $activeFilterParam = @{
-            uri     = "https://graph.microsoft.com/beta/deviceManagement/getAssignmentFiltersStatusDetails"
-            method  = "POST"
-            body    = $filterCheckBody | ConvertTo-Json
-            headers = $graphHeaders
-        }
-        $activeFiltersReq = Invoke-WebRequest @activeFilterParam | ConvertFrom-Json
-        $activeFiltersReq
-        if (($activeFiltersReq.evalutionSummaries) -and ($activeFiltersReq.evalutionSummaries.assignmentFilterType -eq "include") -and ($activeFiltersReq.evalutionSummaries.evaluationResult -eq "match")) {
-            $activeFilters = [PSCustomObject]@{
-                deviceId          = $activeFiltersReq.managedDeviceId
-                activeFilters     = $activeFiltersReq.evalutionSummaries.assignmentFilterId
-                activeFiltersName = $activeFiltersReq.evalutionSummaries.assignmentFilterDisplayName
-            }
-            $activeFiltersPerDevice.Add($activeFilters) >> $null
+    $filterReq = Invoke-WebRequest @filterReqParams | ConvertFrom-Json
+    $filterInfo = @{
+        "data" = @{
+            "platform" = $filterReq.platform
+            "rule"     = $filterReq.rule
+            "skip"     = 0
         }
     }
-    return $activeFiltersPerDevice
+    $activeDevicesFilterParam = @{
+        uri     = "{0}/beta/deviceManagement/evaluateAssignmentFilter" -f $graphUrl
+        method  = "POST"
+        body    = $filterInfo | ConvertTo-Json
+        headers = $graphHeaders
+    }
+    $activeFiltersReq = Invoke-WebRequest @activeDevicesFilterParam | ConvertFrom-Json
+    $activeFiltersReq.values | ForEach-Object {
+        $activeDevice = [PSCustomObject]@{
+            deviceId  = $_[1]
+            osVersion = $_[-3]
+        }
+        $activeDevicesPerFilter.Add($activeDevice) >> $null
+    }
+    $fullReturn = @{
+        "filter"  = $filterReq
+        "devices" = $activeDevicesPerFilter
+    }
+    return $fullReturn
 }
 
 try {
@@ -106,46 +101,35 @@ catch {
 
 if ($null -ne $compliancePolicies) {
     $compliancePolicies | ForEach-Object {
-        $compliancePolicy = $_
-        $compliancePolicyAndDevices = [System.Collections.ArrayList]::new()
         # Search for the assigned filters for each compliance policy and return the devices that match the filter that is assigned to the compliance policy.
         Write-Information -InformationAction Continue -Message "Found $($compliancePolicies.count) compliance policies, checking for assigned filters"
         try {
-            $devicesUrl = "{0}/beta//deviceManagement/managedDevices" -f $graphUrl
-            $devices = (Invoke-WebRequest -Uri $devicesUrl -Method Get -Headers $graphHeaders | ConvertFrom-Json).value
-            $devicesAndMatchingFilters = [System.Collections.ArrayList]::new()
-            $devices | ForEach-Object {
-                $device = $_
-                $filterInfo = Get-ActiveAssignedFilters -IntuneDeviceId $device.id -FilterId $compliancePolicies.assignments.target.deviceAndAppManagementAssignmentFilterId
-                $deviceFilter = [PSCustomObject]@{
-                    device    = $device.id
-                    filter    = $filterInfo
-                    osVersion = $device.osVersion
-                }
-                $devicesAndMatchingFilters.Add($deviceFilter) >> $null
+            $compliancePolicy = $_
+            $filterInfo = Get-MachinesPerFilters -FilterId $compliancePolicy.assignments.target.deviceAndAppManagementAssignmentFilterId
+            $filterResults = [PSCustomObject]@{
+                compliancePolicyName = $compliancePolicy.displayName
+                currentVersions      = $filterInfo.devices.osVersion | Select-Object -Unique
+                osMinimumVersion     = $compliancePolicy.osMinimumVersion
             }
+            $aiInfo = Get-InfoFromAI -content $($filterResults | ConvertTo-Json -Depth 10 -Compress)
         }
         catch {
-            Throw "Unable to get devices from Intune"
+            Throw "Unable to get filter information from Intune"
         }
         try {
-            $compliancePolicy.osMinimumVersion = (Select-String -Pattern '(?<=\<)(.*?)(?=\>)' -InputObject $aiInfo.choices[0].message.content).Matches.Value
-            $compliancePolicy.PSObject.Properties.Remove('assignments')
-            $compliancePoliciesUrl = "{0}/beta/deviceManagement/deviceCompliancePolicies/{1}" -f $graphUrl, $compliancePolicyAndDevices.policy
-            Invoke-WebRequest -Uri $compliancePoliciesUrl -Method PATCH -Headers $graphHeaders -Body ($compliancePolicy | ConvertTo-Json -Depth 10)
-
-            $policyInfo = [PSCustomObject]@{
-                policy           = $_.id
-                name             = $_.displayName
-                definedOsVersion = $_.osMinimumVersion
-                devices          = $devicesAndMatchingFilters
+            # Check of the AI repsonse contains a new version by checking for a version betwee < >, if so, update the compliance policy
+            $newVersion = (Select-String -Pattern '(?<=\<)(.*?)(?=\>)' -InputObject $aiInfo.choices[0].message.content).Matches.Value
+            if ($newVersion) {
+                $compliancePolicy.osMinimumVersion = $newVersion
+                $compliancePolicy.PSObject.Properties.Remove('assignments')
+                $compliancePoliciesUrl = "{0}/beta/deviceManagement/deviceCompliancePolicies/{1}" -f $graphUrl, $compliancePolicy.policy
+                Invoke-WebRequest -Uri $compliancePoliciesUrl -Method PATCH -Headers $graphHeaders -Body ($compliancePolicy | ConvertTo-Json -Depth 10)
             }
         }
         catch {
             Throw "Unable to update compliance policy $($compliancePolicy.displayName) in Intune"
         }
-        $compliancePolicyAndDevices.Add($policyInfo) >> $null
-        $aiInfo = Get-InfoFromAI -content $($compliancePolicyAndDevices | ConvertTo-Json -Depth 10 -Compress)
+
     }
     $cardBody = @"
 {
