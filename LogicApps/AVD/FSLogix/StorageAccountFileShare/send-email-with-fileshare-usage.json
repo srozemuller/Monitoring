@@ -1,0 +1,215 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Parse_file_share_body": {
+                "inputs": {
+                    "content": "@body('Send_HTTP_GET_request_to_fileshare')",
+                    "schema": {
+                        "properties": {
+                            "etag": {
+                                "type": "string"
+                            },
+                            "id": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "properties": {
+                                "properties": {
+                                    "accessTier": {
+                                        "type": "string"
+                                    },
+                                    "accessTierChangeTime": {
+                                        "type": "string"
+                                    },
+                                    "lastModifiedTime": {
+                                        "type": "string"
+                                    },
+                                    "leaseState": {
+                                        "type": "string"
+                                    },
+                                    "leaseStatus": {
+                                        "type": "string"
+                                    },
+                                    "shareQuota": {
+                                        "type": "integer"
+                                    },
+                                    "shareUsageBytes": {
+                                        "type": "integer"
+                                    },
+                                    "signedIdentifiers": {
+                                        "type": "array"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "type": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "runAfter": {
+                    "Send_HTTP_GET_request_to_fileshare": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "type": "ParseJson"
+            },
+            "PercentUsage": {
+                "inputs": {
+                    "name": "percentUsage",
+                    "value": "@mul(div(variables('shareUsage'),variables('fileShareSize')),100)"
+                },
+                "runAfter": {
+                    "Set_Fileshare_size": [
+                        "SUCCEEDED"
+                    ],
+                    "ShareUsageInGB": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "type": "SetVariable"
+            },
+            "Send_HTTP_GET_request_to_fileshare": {
+                "inputs": {
+                    "authentication": {
+                        "audience": "https://management.azure.com",
+                        "type": "ManagedServiceIdentity"
+                    },
+                    "method": "GET",
+                    "uri": "https://management.azure.com/subscriptions/5cdde9cd-9196-4483-94e9-e220a9ba8c7d/resourceGroups/infr-avddevfs-nonp-we-RG/providers/Microsoft.Storage/storageAccounts/infravddevnwest01/fileServices/default/shares/userprofile?$expand=stats&api-version=2023-01-01"
+                },
+                "runAfter": {
+                    "fileShareSize_variable": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "runtimeConfiguration": {
+                    "contentTransfer": {
+                        "transferMode": "Chunked"
+                    }
+                },
+                "type": "Http"
+            },
+            "Send_an_email_(V2)": {
+                "inputs": {
+                    "body": {
+                        "Body": "<p>Hi handsome,</p><br><p>I did a check on the file share &lt;b&gt;@{body('Parse_file_share_body')?['name']}&lt;b&gt; for its size and free space. </p><p>This is the result:</p><p>- File share size: @{variables('fileShareSize')} </p><p>- In use: @{variables('shareUsage')}</p><br><p>That is @{variables('percentUsage')}% of the total</p><br><p><a href=\"https://portal.azure.com/subscriptions/5cdde9cd-9196-4483-94e9-e220a9ba8c7d/resourceGroups/infr-avddevfs-nonp-we-RG/providers/Microsoft.Storage/storageAccounts/infravddevnwest01\">Go to storage account infravddevnwest01</a></p>",
+                        "Importance": "Normal",
+                        "Subject": "[Monitoring] File share disk size check on: @{body('Parse_file_share_body')?['name']}",
+                        "To": "sander.rozenmuller@ogd.nl"
+                    },
+                    "host": {
+                        "connection": {
+                            "referenceName": "office365"
+                        }
+                    },
+                    "method": "post",
+                    "path": "/v2/Mail"
+                },
+                "runAfter": {
+                    "Parse_file_share_body": [
+                        "SUCCEEDED"
+                    ],
+                    "PercentUsage": [
+                        "SUCCEEDED"
+                    ],
+                    "Set_Fileshare_size": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
+            "Set_Fileshare_size": {
+                "inputs": {
+                    "name": "fileShareSize",
+                    "value": "@body('Parse_file_share_body')?['properties']?['shareQuota']"
+                },
+                "runAfter": {
+                    "Parse_file_share_body": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "type": "SetVariable"
+            },
+            "ShareUsageInGB": {
+                "inputs": {
+                    "name": "shareUsage",
+                    "value": "@div(body('Parse_file_share_body')?['properties']?['shareUsageBytes'],1073741824)"
+                },
+                "runAfter": {
+                    "Parse_file_share_body": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "type": "SetVariable"
+            },
+            "fileShareSize_variable": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "fileShareSize",
+                            "type": "integer"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "shareUsage_variable": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "percentUsage_variable": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "percentUsage",
+                            "type": "integer"
+                        }
+                    ]
+                },
+                "runAfter": {},
+                "type": "InitializeVariable"
+            },
+            "shareUsage_variable": {
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "shareUsage",
+                            "type": "integer"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "percentUsage_variable": [
+                        "SUCCEEDED"
+                    ]
+                },
+                "type": "InitializeVariable"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "triggers": {
+            "Recurrence": {
+                "recurrence": {
+                    "frequency": "Day",
+                    "interval": 1,
+                    "schedule": {
+                        "hours": [
+                            "8"
+                        ]
+                    },
+                    "timeZone": "W. Europe Standard Time"
+                },
+                "type": "Recurrence"
+            }
+        }
+    },
+    "kind": "Stateful"
+}

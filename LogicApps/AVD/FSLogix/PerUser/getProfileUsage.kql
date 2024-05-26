@@ -1,0 +1,8 @@
+WVDCheckpoints | where (Name=="ProfileLoggedOff" or Name=="ODFCLoggedOff") and (Source=="RDAgent" or Source=="FSLogix") and TimeGenerated>ago(360d)
+| extend HostPool=tostring(split(_ResourceId,"/")[8]), ProfileType=iff(Name=="ProfileLoggedOff","Profile","ODFC")
+| summarize arg_max(TimeGenerated, *) by UserName, _ResourceId, ProfileType
+| extend ["VHD Size On Disk"]=todouble(replace_string(replace_string(tostring(Parameters.VHDSizeOnDisk),",",""),".","")),["VHD Free Space"]=todouble(replace_string(tostring(Parameters.VHDFreeSpace),",",".")),["VHD Max Size"]=todouble(replace_string(tostring(Parameters.MaxVHDSize),",","."))
+| where ["VHD Size On Disk"]!=""
+| extend ["VHD Free Space"]=iff(["VHD Free Space"]>["VHD Max Size"],["VHD Free Space"]/1024.0,["VHD Free Space"])
+| project HostPool, UserName, TimeStamp=TimeGenerated,ProfileType, ["VHD Size On Disk"], ["VHD Free Space"], ["VHD Max Size"], Usage=100*(["VHD Max Size"]-["VHD Free Space"])/["VHD Max Size"]
+| order by ["Usage"] desc

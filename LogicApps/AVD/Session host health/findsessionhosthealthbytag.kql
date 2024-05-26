@@ -1,0 +1,42 @@
+// This log search finds session hosts in the provided host pool and looks for its health state. Only the session host with the host pool's deployment color will be searched for.
+let HostPoolName = "infra-avd-dev-vdpool";
+let TagValueToSearch = toscalar(
+    arg("").Resources
+    | where type == "microsoft.desktopvirtualization/hostpools"
+    | where name == HostPoolName
+    | extend TagsParsed = parse_json(tags)
+    | extend DeploymentColor = tostring(TagsParsed.deploymentcolor)
+    | project DeploymentColor
+    );
+arg("").desktopvirtualizationresources
+| extend HostPool = tostring(split(name, "/")[0])
+| where type == "microsoft.desktopvirtualization/hostpools/sessionhosts"
+| where HostPool == HostPoolName
+| extend VmResourceId = tolower(properties.resourceId)
+| join kind=innerunique   (
+    VMComputer
+    | extend VmResourceId = tolower(_ResourceId)
+    | lookup (
+        arg("").Resources
+        | where type == 'microsoft.compute/virtualmachines'
+        | where tostring(tags.deploymentcolor) == TagValueToSearch
+        | project VmResourceId=tolower(id), vmTags=tags
+        )
+        on VmResourceId
+    )
+    on VmResourceId
+| mv-expand healthCheckData=properties.sessionHostHealthCheckResults
+| extend
+    healthCheckResult = healthCheckData.healthCheckResult,
+    healthCheckName = tostring(healthCheckData.healthCheckName),
+    additionalHealthCheckStatus = tostring(healthCheckData.additionalFailureDetails.message),
+    lastHealthCheckDateTime = todatetime(healthCheckData.additionalFailureDetails.lastHealthCheckDateTime)
+| where healthCheckResult !contains "Succeeded"
+| summarize arg_max(lastHealthCheckDateTime, *) by healthCheckName
+| project
+    VmResourceId,
+    HostPool,
+    tostring(healthCheckName),
+    tostring(healthCheckResult),
+    tostring(lastHealthCheckDateTime),
+    tostring(additionalHealthCheckStatus)

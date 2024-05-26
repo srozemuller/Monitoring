@@ -1,0 +1,12 @@
+// Virtual Machine available memory. 
+InsightsMetrics
+| where TimeGenerated > ago(1h)
+| where Origin == "vm.azm.ms"
+| where Namespace == "Memory"
+| where Name == "AvailableMB"
+| join kind=inner(
+VMComputer
+) on _ResourceId
+| extend PercentAvailable = 100*(Val/PhysicalMemoryMB)
+| summarize AvailablePercent = avg(PercentAvailable) by bin(TimeGenerated, 5m), Computer
+| order by Computer
