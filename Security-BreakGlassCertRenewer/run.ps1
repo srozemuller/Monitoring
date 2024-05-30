@@ -21,8 +21,10 @@ $graphHeader = @{
     'Content-Type' = 'application/json'
     Authorization  = "Bearer {0}" -f $graphToken.token
 }
-
-$graphToken.token
+#Obtain AccessToken for Microsoft Graph via the Managed Identity
+$resourceURL = "https://graph.microsoft.com/" 
+$response = [System.Text.Encoding]::Default.GetString((Invoke-WebRequest -UseBasicParsing -Uri "$($env:IDENTITY_ENDPOINT)?resource=$resourceURL" -Method 'GET' -Headers @{'X-IDENTITY-HEADER' = "$env:IDENTITY_HEADER"; 'Metadata' = 'True'}).RawContentStream.ToArray()) | ConvertFrom-Json 
+$response.access_token
 try {
     import-module .\Modules\mem-monitor-functions.psm1
 }
@@ -35,7 +37,7 @@ catch {
 try {
     Write-Information "Searching for certificates in key vault" -InformationAction Continue
     $breakglassCertificateUrl = "{0}/certificates/{1}?api-version=7.4&maxresults=25&_=1714746115235" -f $env:KEYVAULT_URL, $env:BREAKGLASS_CERTNAME
-    $results = Invoke-RestMethod -Uri $breakglassCertificateUrl -Headers $keyvaultHeaders -Method Get
+    # $results = Invoke-RestMethod -Uri $breakglassCertificateUrl -Headers $keyvaultHeaders -Method Get
 }
 catch {
     Throw "Unable to request certificates, $_"
