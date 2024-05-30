@@ -60,9 +60,9 @@ try {
     # Convert the secret value to a byte array
     $certBytes = [System.Convert]::FromBase64String($status.cer)
     # Create a new X509Certificate2 object using the byte array and password
-    $x509Cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2 -ArgumentList ($certBytes, $certPassword, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
+    $x509Cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2 -ArgumentList ($certBytes, $env:certPassword, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
     # Export the certificate with the private key
-    $pfxBytes = $x509Cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Pfx, $certPassword)
+    $pfxBytes = $x509Cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Pfx, $env:certPassword)
     $certFilePath = "certificate.pfx"
     # Write the byte array to a file
     [System.IO.File]::WriteAllBytes($certFilePath, $pfxBytes)
