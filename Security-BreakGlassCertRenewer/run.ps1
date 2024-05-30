@@ -6,8 +6,6 @@ $informationPreference = 'Continue'
 # Write an information log with the current time.
 Write-Output "PowerShell timer trigger function ran! TIME: $currentTime"
 # Connect to Azure using the system assigned identity
-# Disconnect first to make sure we use fresh credentials
-Disconnect-AzAccount
 Connect-AzAccount -Identity
 
 $ProgressPreference = "SilentlyContinue"
@@ -35,7 +33,7 @@ catch {
 try {
     Write-Information "Searching for certificates in key vault" -InformationAction Continue
     $breakglassCertificateUrl = "{0}/certificates/{1}?api-version=7.4&maxresults=25&_=1714746115235" -f $env:KEYVAULT_URL, $env:BREAKGLASS_CERTNAME
-    # $results = Invoke-RestMethod -Uri $breakglassCertificateUrl -Headers $keyvaultHeaders -Method Get
+    $results = Invoke-RestMethod -Uri $breakglassCertificateUrl -Headers $keyvaultHeaders -Method Get
 }
 catch {
     Throw "Unable to request certificates, $_"
