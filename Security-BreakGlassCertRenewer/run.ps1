@@ -21,10 +21,8 @@ $graphHeader = @{
     'Content-Type' = 'application/json'
     Authorization  = "Bearer {0}" -f $graphToken.token
 }
-#Obtain AccessToken for Microsoft Graph via the Managed Identity
-$resourceURL = "https://graph.microsoft.com/" 
-$response = [System.Text.Encoding]::Default.GetString((Invoke-WebRequest -UseBasicParsing -Uri "$($env:IDENTITY_ENDPOINT)?resource=$resourceURL" -Method 'GET' -Headers @{'X-IDENTITY-HEADER' = "$env:IDENTITY_HEADER"; 'Metadata' = 'True'}).RawContentStream.ToArray()) | ConvertFrom-Json 
-$response.access_token
+
+$graphToken.token
 try {
     import-module .\Modules\mem-monitor-functions.psm1
 }
