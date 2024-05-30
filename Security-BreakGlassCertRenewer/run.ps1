@@ -63,6 +63,7 @@ try {
     $x509Cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2 -ArgumentList ($certBytes, $certPassword, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
     # Export the certificate with the private key
     $pfxBytes = $x509Cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Pfx, $certPassword)
+    $certFilePath = "./"
     # Write the byte array to a file
     [System.IO.File]::WriteAllBytes($certFilePath, $pfxBytes)
     # Read the certificate file
