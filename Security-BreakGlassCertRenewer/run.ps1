@@ -20,7 +20,7 @@ $graphHeader = @{
     Authorization  = "Bearer {0}" -f $graphToken.token
 }
 
-
+$graphToken.token
 try {
     import-module .\Modules\mem-monitor-functions.psm1
 }
