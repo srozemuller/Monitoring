@@ -40,6 +40,10 @@ catch {
 }
 
 try {
+    if (!$results) {
+        Throw "No certificates found"
+    }
+    Write-Output "First renew certifcate"
     #Renew the certificate
     $renewBody = @{
         attributes = $results.attributes
@@ -52,6 +56,7 @@ try {
     }
     while ($status.status)
 
+    Write-Output "Exporting certificate and make it ready for attaching it to the application"
     # Convert the secret value to a byte array
     $certBytes = [System.Convert]::FromBase64String($status.cer)
     # Create a new X509Certificate2 object using the byte array and password
@@ -63,8 +68,13 @@ try {
     # Read the certificate file
     $certBytes = [System.IO.File]::ReadAllBytes($pfxBytes)
     $base64Cert = [Convert]::ToBase64String($certBytes)
+}
+catch {
+    Throw $_
+}
     
-    #Upload the certificate to the application
+try {
+    Write-Output "Upload the certificate to the application"
     $graphUrl = "{0}/beta/applications/{1}" -f $env:GRAPHAPI_URL, $env:APPLICATION_ID
     $createdAt = Get-Date -UnixTimeSeconds $status.attributes.created -AsUTC -Format "o"
     $expiresAt = Get-Date -UnixTimeSeconds $status.attributes.exp -AsUTC -Format "o"
@@ -82,7 +92,7 @@ try {
     } | ConvertTo-Json
     Invoke-RestMethod -Method PATCH -Uri $graphUrl -Headers $graphHeader -Body $certBody
 
-    #Send mail to administrator
+    Write-Output "Send mail to administrator"
     $body =
     @"
 {
@@ -115,5 +125,5 @@ try {
     Invoke-RestMethod -Method POST -Uri $sendMailUrl -Headers $graphHeader -Body $body
 }
 catch {
-
+    Throw $_
 }
