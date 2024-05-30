@@ -6,6 +6,8 @@ $informationPreference = 'Continue'
 # Write an information log with the current time.
 Write-Output "PowerShell timer trigger function ran! TIME: $currentTime"
 # Connect to Azure using the system assigned identity
+# Disconnect first to make sure we use fresh credentials
+Disconnect-AzAccount
 Connect-AzAccount -Identity
 
 $ProgressPreference = "SilentlyContinue"
