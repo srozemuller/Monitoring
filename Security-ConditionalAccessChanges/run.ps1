@@ -45,7 +45,7 @@ $laUri = $Request.Body.data.alertContext.condition.allOf[0].linkToSearchResultsA
 
 $results = Invoke-RestMethod -uri $laUri -Method get -Headers $monitorHeaders
 
-$headers = @{
+$openAIheaders = @{
     "api-key"       = $env:AZURE_OPENAI_API_KEY
     "Content-Type"  = "application/json"
 }
@@ -72,7 +72,7 @@ $threadRunBody = @{
 
 $runResp = Invoke-RestMethod -Method Post `
     -Uri "$endpoint/threads/runs?api-version=$apiVersion" `
-    -Headers $headers `
+    -Headers $openAIheaders `
     -Body $threadRunBody
 
 $threadId = $runResp.thread_id
@@ -83,7 +83,7 @@ do {
     Start-Sleep -Seconds 1
     $statusResp = Invoke-RestMethod -Method Get `
         -Uri "$endpoint/threads/$threadId/runs/$runId`?api-version=$apiVersion" `
-        -Headers $headers
+        -Headers $openAIheaders
     $status = $statusResp.status
     Write-Host "Run status: $status"
 } until ($status -in @("completed","failed","cancelled")) 
@@ -94,7 +94,7 @@ if ($status -ne "completed") {
 
 $msgsResp = Invoke-RestMethod -Method Get `
     -Uri "$endpoint/threads/$threadId/messages?api-version=$apiVersion" `
-    -Headers $headers
+    -Headers $openAIheaders
 
 # Extract the last assistant message
 $assistantMsg = $msgsResp.data |
