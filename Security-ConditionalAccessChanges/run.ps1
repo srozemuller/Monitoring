@@ -16,7 +16,7 @@ $token = ($response.Content | Convertfrom-json).access_token
 $token 
 $monitorHeaders = @{
     'Content-Type' = 'application/json'
-    Authorization  = "Bearer {0}" -f $token.token
+    'Authorization'  = "Bearer {0}" -f $token.token
 }
 $Request.Body | ConvertTo-Json -Depth 99
 # The alert schema does not provide the content to look in to. Instead of that, I grab the linkToSearchResultsAPI value that allows me to get the content from Log Analytics.
