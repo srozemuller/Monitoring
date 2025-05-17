@@ -21,6 +21,9 @@ $monitorHeaders = @{
 $Request.Body | ConvertTo-Json -Depth 99
 # The alert schema does not provide the content to look in to. Instead of that, I grab the linkToSearchResultsAPI value that allows me to get the content from Log Analytics.
 $laUri = $Request.Body.data.alertContext.condition.allOf[0].linkToSearchResultsAPI
+
+$monitorHeaders | ConvertTo-Json
+$laUri
 $results = Invoke-RestMethod -uri $laUri -Method get -Headers $monitorHeaders
 
 # Based on the results, I ask OpenAI to find out what is changed.
