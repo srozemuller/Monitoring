@@ -419,4 +419,4 @@ $cardBody = @"
     ]
 }
 "@
-Invoke-RestMethod -Method post -uri $env:teamsUrl -body $cardBody
+Invoke-RestMethod -Method post -uri $env:teamsUrl -body $cardBody -ContentType "application/json"
