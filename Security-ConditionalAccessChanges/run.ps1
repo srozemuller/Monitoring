@@ -54,8 +54,8 @@ $endpoint   = "$env:AZURE_OPENAI_ENDPOINT/openai"
 
 $assistantId = "asst_WJYWT2zmaqwNhQUldcjzt2se"
 
-$oldJson = $($results.tables.rows[-2])
-$newJson = $($results.tables.rows[-1])
+$oldJson = $($results.tables.rows[-2])[-1]
+$newJson = $($results.tables.rows[-1])[-1]
 $userQuestion = Format-PolicyChangeQuestion -OldJson $oldJson -NewJson $newJson
 
 $threadRunBody = @{
