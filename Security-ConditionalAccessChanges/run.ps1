@@ -9,6 +9,7 @@ if ($Timer.IsPastDue) {
 # Connect to Azure using the system assigned identity
 Connect-AzAccount -Identity
 $headers = @{"X-IDENTITY-HEADER" = $env:IDENTITY_HEADER }
+
 $ProgressPreference = "SilentlyContinue"
 $response = Invoke-WebRequest -UseBasicParsing -Uri "$($env:IDENTITY_ENDPOINT)?resource=https://api.loganalytics.io&api-version=2019-08-01" -Headers $headers
 $token = ($response.Content | Convertfrom-json).access_token
