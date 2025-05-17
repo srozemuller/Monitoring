@@ -16,7 +16,7 @@ $monitorHeaders = @{
     'Content-Type' = 'application/json'
     Authorization  = "Bearer {0}" -f $token.token
 }
-$Request.Body | ConvertTo-Json
+$Request.Body | ConvertTo-Json -Depth 99
 # The alert schema does not provide the content to look in to. Instead of that, I grab the linkToSearchResultsAPI value that allows me to get the content from Log Analytics.
 $laUri = $Request.Body.data.alertContext.condition.allOf[0].linkToSearchResultsAPI
 $results = Invoke-RestMethod -uri $laUri -Method get -Headers $monitorHeaders
