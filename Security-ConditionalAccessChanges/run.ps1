@@ -40,8 +40,10 @@ $monitorHeaders = @{
     'Authorization'  = "Bearer {0}" -f $token
 }
 $Request.Body | ConvertTo-Json -Depth 99
+
+$token
 # The alert schema does not provide the content to look in to. Instead of that, I grab the linkToSearchResultsAPI value that allows me to get the content from Log Analytics.
-$laUri = $Request.Body.data.alertContext.condition.allOf[0].linkToSearchResultsAPI
+$laUri = $Request.Body.data.alertContext.condition.allOf[0].linkToFilteredSearchResultsUI
 
 $results = Invoke-RestMethod -uri $laUri -Method get -Headers $monitorHeaders
 
@@ -54,8 +56,8 @@ $endpoint   = "$env:AZURE_OPENAI_ENDPOINT/openai"
 
 $assistantId = "asst_WJYWT2zmaqwNhQUldcjzt2se"
 
-$oldJson = $($results.tables.rows[-2])[-1]
-$newJson = $($results.tables.rows[-1])[-1]
+$oldJson = $($results.tables.rows[-2])
+$newJson = $($results.tables.rows[-1])
 $userQuestion = Format-PolicyChangeQuestion -OldJson $oldJson -NewJson $newJson
 
 $threadRunBody = @{
