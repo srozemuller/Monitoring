@@ -222,7 +222,7 @@ $cardBody = @"
                                         "items": [
                                             {
                                                 "type": "TextBlock",
-                                                "text": "$($reply)",
+                                                "text": "$($reply.Replace('"',"'"))",
   
                                                 "wrap": true
                                             }
