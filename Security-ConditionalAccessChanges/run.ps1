@@ -45,7 +45,9 @@ $token
 # The alert schema does not provide the content to look in to. Instead of that, I grab the linkToSearchResultsAPI value that allows me to get the content from Log Analytics.
 $laUri = $Request.Body.data.alertContext.condition.allOf[0].linkToFilteredSearchResultsUI
 
-$results = Invoke-RestMethod -uri $laUri -Method get -Headers $monitorHeaders
+$laApiFilter = $Request.Body.data.alertContext.condition.allOf[0].linkToFilteredSearchResultsAPI
+
+$results = Invoke-RestMethod -uri $laApiFilter -Method get -Headers $monitorHeaders
 
 $openAIheaders = @{
     "api-key"       = $env:AZURE_OPENAI_API_KEY
@@ -404,10 +406,15 @@ $cardBody = @"
                     },
                     {
                         "actions": [
-                             {
+                            {
                                 "title": "Go to Alert",
                                 "type": "Action.OpenUrl",
                                 "url": "https://portal.azure.com/#view/Microsoft_Azure_Monitoring_Alerts/AlertDetails.ReactView/alertId~/%2Fsubscriptions%2F6d3c408e-b617-44ed-bc24-280249636525%2Fresourcegroups%2Fconditionalaccesstester%2Fproviders%2Fmicrosoft.operationalinsights%2Fworkspaces%2Fcatestlogs24%2Fproviders%2FMicrosoft.AlertsManagement%2Falerts%2Fc9958b43-665d-991e-707d-0bd5961d000e/invokedFrom/CopyLinkFeature"
+                            },
+                            {
+                                "title": "Go to Log row",
+                                "type": "Action.OpenUrl",
+                                "url": "$laUri"
                             }
                         ],
                         "type": "ActionSet",
