@@ -60,6 +60,7 @@ $assistantId = "asst_WJYWT2zmaqwNhQUldcjzt2se"
 
 $oldJson = $($results.tables.rows[-2])
 $newJson = $($results.tables.rows[-1])
+$initiator = $($results.tables.rows[-3]) | ConvertFrom-Json
 $userQuestion = Format-PolicyChangeQuestion -OldJson $oldJson -NewJson $newJson
 
 $threadRunBody = @{
@@ -153,7 +154,7 @@ $cardBody = @"
                                 "items": [
                                     {
                                         "size": "Large",
-                                        "text": "Conditional Access Test Failure",
+                                        "text": "Conditional Access has changed!",
                                         "weight": "Bolder",
                                         "wrap": true,
                                         "type": "TextBlock"
@@ -179,6 +180,62 @@ $cardBody = @"
                             }
                         ],
                         "rows": [
+                            {
+                                "type": "TableRow",
+                                "cells": [
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "Initiator",
+                                                "wrap": true,
+                                                "weight": "Bolder"
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    },
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "$($initiator.user.displayName) ($($initiator.user.id))",
+                                                "wrap": true
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "TableRow",
+                                "cells": [
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "IpAdress",
+                                                "wrap": true,
+                                                "weight": "Bolder"
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    },
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "$($initiator.user.ipAddress)",
+                                                "wrap": true
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    }
+                                ]
+                            },
                             {
                                 "type": "TableRow",
                                 "cells": [
@@ -215,7 +272,7 @@ $cardBody = @"
                                         "items": [
                                             {
                                                 "type": "TextBlock",
-                                                "text": "Due Date",
+                                                "text": "Explanation",
                                                 "wrap": true,
                                                 "weight": "Bolder"
                                             }
