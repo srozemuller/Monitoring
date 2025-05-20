@@ -27,8 +27,14 @@ $laUri = $Request.Body.data.alertContext.condition.allOf[0].linkToFilteredSearch
 $laApiFilter = $Request.Body.data.alertContext.condition.allOf[0].linkToFilteredSearchResultsAPI
 
 $results = Invoke-RestMethod -uri $laApiFilter -Method get -Headers $monitorHeaders
-$jsonResult = $($results.tables.rows[-2]) | ConvertFrom-Json -Depth 5
-$policyName = $($results.tables.rows[-1])
+if ($results.tables.rows.count > 1){
+    $jsonResult = $($results.tables.rows[-1])[-2] | ConvertFrom-Json -Depth 5
+    $policyName = $($results.tables.rows[-1])[-1]
+}
+else {
+    $jsonResult = $($results.tables.rows[-2]) | ConvertFrom-Json -Depth 5
+    $policyName = $($results.tables.rows[-1])
+}
 
 $cardBody = @"
 {
@@ -261,7 +267,7 @@ $cardBody = @"
                             {
                                 "title": "Go to Alert",
                                 "type": "Action.OpenUrl",
-                                "url": "https://portal.azure.com/#view/Microsoft_Azure_Monitoring_Alerts/AlertDetails.ReactView/alertId~/%2Fsubscriptions%2F6d3c408e-b617-44ed-bc24-280249636525%2Fresourcegroups%2Fconditionalaccesstester%2Fproviders%2Fmicrosoft.operationalinsights%2Fworkspaces%2Fcatestlogs24%2Fproviders%2FMicrosoft.AlertsManagement%2Falerts%2Fc9958b43-665d-991e-707d-0bd5961d000e/invokedFrom/CopyLinkFeature"
+                                "url": "https://portal.azure.com/#view/Microsoft_Azure_Monitoring_Alerts/AlertDetails.ReactView/alertId~/%2Fsubscriptions%2F6d3c408e-b617-44ed-bc24-280249636525%2Fresourcegroups%2Fconditionalaccesstester%2Fproviders%2Fmicrosoft.operationalinsights%2Fworkspaces%2Fcatestlogs24%2Fproviders%2FMicrosoft.AlertsManagement%2Falerts%2F73d25db3-2a3e-8d56-fa05-dc97808a000e/invokedFrom/CopyLinkFeature"
                             },
                             {
                                 "title": "Go to Log row",
