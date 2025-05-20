@@ -137,7 +137,7 @@ $cardBody = @"
                                         "items": [
                                             {
                                                 "type": "TextBlock",
-                                                "text": "IpAdress",
+                                                "text": "TestResult",
                                                 "wrap": true,
                                                 "weight": "Bolder"
                                             }
@@ -149,7 +149,53 @@ $cardBody = @"
                                         "items": [
                                             {
                                                 "type": "TextBlock",
-                                                "text": "$($jsonResult.TestResults)",
+                                                "text": "$($jsonResult.TestResults.TestResult)",
+                                                "wrap": true
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    },
+                                     {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "Reason",
+                                                "wrap": true,
+                                                "weight": "Bolder"
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    },
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "$($jsonResult.TestResults.SkippedReason)",
+                                                "wrap": true
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    }
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "Description",
+                                                "wrap": true,
+                                                "weight": "Bolder"
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    },
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "$($jsonResult.TestResults.TestDescription)",
                                                 "wrap": true
                                             }
                                         ],
