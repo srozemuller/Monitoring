@@ -27,7 +27,9 @@ $laUri = $Request.Body.data.alertContext.condition.allOf[0].linkToFilteredSearch
 $laApiFilter = $Request.Body.data.alertContext.condition.allOf[0].linkToFilteredSearchResultsAPI
 
 $results = Invoke-RestMethod -uri $laApiFilter -Method get -Headers $monitorHeaders
-if ($results.tables.rows.count -gt 1){
+
+# Check if the results are in an array or just one row that returns.. If more rows then, select last one. 
+if (($results.tables.rows[-1]) -is [System.Object[]]){
     $jsonResult = $($results.tables.rows[-1])[-2] | ConvertFrom-Json
     $policyName = $($results.tables.rows[-1])[-1]
 } else {
