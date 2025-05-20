@@ -101,6 +101,62 @@ $cardBody = @"
                             }
                         ],
                         "rows": [
+                        {
+                                "type": "TableRow",
+                                "cells": [
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "Priority",
+                                                "wrap": true,
+                                                "weight": "Bolder"
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    },
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "ColumnSet",
+                                                "columns": [
+                                                    {
+                                                        "type": "Column",
+                                                        "width": "auto",
+                                                        "items": [
+                                                            {
+                                                                "type": "Icon",
+                                                                "name": "Flag",
+                                                                "color": "Attention",
+                                                                "size": "xSmall",
+                                                                "horizontalAlignment": "Center"
+                                                            }
+                                                        ]
+                                                    },
+                                                    {
+                                                        "type": "Column",
+                                                        "width": "stretch",
+                                                        "items": [
+                                                            {
+                                                                "color": "Attention",
+                                                                "text": "Critical",
+                                                                "wrap": true,
+                                                                "spacing": "Small",
+                                                                "type": "TextBlock"
+                                                            }
+                                                        ],
+                                                        "spacing": "Small"
+                                                    }
+                                                ],
+                                                "spacing": "Small"
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    }
+                                ]
+                            },
                             {
                                 "type": "TableRow",
                                 "cells": [
@@ -197,117 +253,6 @@ $cardBody = @"
                                                 "type": "TextBlock",
                                                 "text": "$($jsonResult.TestResults.TestDescription)",
                                                 "wrap": true
-                                            }
-                                        ],
-                                        "verticalContentAlignment": "Center"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "TableRow",
-                                "cells": [
-                                    {
-                                        "type": "TableCell",
-                                        "items": [
-                                            {
-                                                "type": "TextBlock",
-                                                "text": "Policy Name",
-                                                "wrap": true,
-                                                "weight": "Bolder"
-                                            }
-                                        ],
-                                        "verticalContentAlignment": "Center"
-                                    },
-                                    {
-                                        "type": "TableCell",
-                                        "items": [
-                                            {
-                                                "type": "TextBlock",
-                                                "text": "Name",
-                                                "wrap": true
-                                            }
-                                        ],
-                                        "verticalContentAlignment": "Center"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "TableRow",
-                                "cells": [
-                                    {
-                                        "type": "TableCell",
-                                        "items": [
-                                            {
-                                                "type": "TextBlock",
-                                                "text": "Explanation",
-                                                "wrap": true,
-                                                "weight": "Bolder"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "TableCell",
-                                        "items": [
-                                            {
-                                                "type": "TextBlock",
-                                                "text": "$($reply.Replace('"',"'"))",
-  
-                                                "wrap": true
-                                            }
-                                        ]
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "TableRow",
-                                "cells": [
-                                    {
-                                        "type": "TableCell",
-                                        "items": [
-                                            {
-                                                "type": "TextBlock",
-                                                "text": "Priority",
-                                                "wrap": true,
-                                                "weight": "Bolder"
-                                            }
-                                        ],
-                                        "verticalContentAlignment": "Center"
-                                    },
-                                    {
-                                        "type": "TableCell",
-                                        "items": [
-                                            {
-                                                "type": "ColumnSet",
-                                                "columns": [
-                                                    {
-                                                        "type": "Column",
-                                                        "width": "auto",
-                                                        "items": [
-                                                            {
-                                                                "type": "Icon",
-                                                                "name": "Flag",
-                                                                "color": "Attention",
-                                                                "size": "xSmall",
-                                                                "horizontalAlignment": "Center"
-                                                            }
-                                                        ]
-                                                    },
-                                                    {
-                                                        "type": "Column",
-                                                        "width": "stretch",
-                                                        "items": [
-                                                            {
-                                                                "color": "Attention",
-                                                                "text": "Critical",
-                                                                "wrap": true,
-                                                                "spacing": "Small",
-                                                                "type": "TextBlock"
-                                                            }
-                                                        ],
-                                                        "spacing": "Small"
-                                                    }
-                                                ],
-                                                "spacing": "Small"
                                             }
                                         ],
                                         "verticalContentAlignment": "Center"
