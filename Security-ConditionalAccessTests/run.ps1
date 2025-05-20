@@ -27,12 +27,11 @@ $laUri = $Request.Body.data.alertContext.condition.allOf[0].linkToFilteredSearch
 $laApiFilter = $Request.Body.data.alertContext.condition.allOf[0].linkToFilteredSearchResultsAPI
 
 $results = Invoke-RestMethod -uri $laApiFilter -Method get -Headers $monitorHeaders
-if ($results.tables.rows.count > 1){
-    $jsonResult = $($results.tables.rows[-1])[-2] | ConvertFrom-Json -Depth 5
+if ($results.tables.rows.count -gt 1){
+    $jsonResult = $($results.tables.rows[-1])[-2] | ConvertFrom-Json
     $policyName = $($results.tables.rows[-1])[-1]
-}
-else {
-    $jsonResult = $($results.tables.rows[-2]) | ConvertFrom-Json -Depth 5
+} else {
+    $jsonResult = $($results.tables.rows[-2]) | ConvertFrom-Json
     $policyName = $($results.tables.rows[-1])
 }
 
