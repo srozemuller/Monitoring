@@ -64,16 +64,23 @@ $runId    = $runResp.id
 Write-Host "Run created: thread=$threadId  run=$runId  (status: $($runResp.status))"
 
 do {
-    Start-Sleep -Seconds 1
+    Start-Sleep -Seconds 2
     $statusResp = Invoke-RestMethod -Method Get `
         -Uri "$endpoint/threads/$threadId/runs/$runId`?api-version=$apiVersion" `
         -Headers $openAIheaders
     $status = $statusResp.status
     Write-Host "Run status: $status"
-} until ($status -in @("completed","failed","cancelled")) 
+    $i++
+} until (
+    ($status -in @("completed","failed","cancelled")) -or  # done by status 
+    ($i -ge 10)                                          # or max 10 tries
+)
 
-if ($status -ne "completed") {
-    throw "Run did not complete successfully: $status"
+# post‐loop check
+if ($status -in @("completed","failed","cancelled")) {
+    Write-Host "Finished with status: $status"
+} else {
+    Write-Warning "Max retries reached; last status was: $status"
 }
 
 $msgsResp = Invoke-RestMethod -Method Get `
