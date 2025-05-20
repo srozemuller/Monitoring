@@ -27,19 +27,8 @@ $laUri = $Request.Body.data.alertContext.condition.allOf[0].linkToFilteredSearch
 $laApiFilter = $Request.Body.data.alertContext.condition.allOf[0].linkToFilteredSearchResultsAPI
 
 $results = Invoke-RestMethod -uri $laApiFilter -Method get -Headers $monitorHeaders
-
-$openAIheaders = @{
-    "api-key"       = $env:AZURE_OPENAI_API_KEY
-    "Content-Type"  = "application/json"
-}
-$apiVersion = "2025-04-01-preview"
-$endpoint   = "$env:AZURE_OPENAI_ENDPOINT/openai"
-
-$assistantId = "asst_WJYWT2zmaqwNhQUldcjzt2se"
-
 $jsonResult = $($results.tables.rows[-2]) | ConvertFrom-Json -Depth 5
 $policyName = $($results.tables.rows[-1])
-
 
 $cardBody = @"
 {
@@ -53,10 +42,6 @@ $cardBody = @"
                 "type": "AdaptiveCard",
                 "speak": "Conditional Access Test results",
                 "body": [
-                    {
-                        "inlines": [],
-                        "type": "RichTextBlock"
-                    },
                     {
                         "columns": [
                             {
@@ -75,7 +60,7 @@ $cardBody = @"
                                 "items": [
                                     {
                                         "size": "Large",
-                                        "text": "Conditional Access test failed!",
+                                        "text": "Conditional Access Test Failed!",
                                         "weight": "Bolder",
                                         "wrap": true,
                                         "type": "TextBlock"
@@ -91,7 +76,6 @@ $cardBody = @"
                     },
                     {
                         "type": "Table",
-                        "targetWidth": "AtLeast:Narrow",
                         "columns": [
                             {
                                 "width": 1
@@ -101,7 +85,118 @@ $cardBody = @"
                             }
                         ],
                         "rows": [
-                        {
+                            {
+                                "type": "TableRow",
+                                "cells": [
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "Name",
+                                                "wrap": true,
+                                                "weight": "Bolder"
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    },
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "$($policyName)",
+                                                "wrap": true
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "TableRow",
+                                "cells": [
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "Result",
+                                                "wrap": true,
+                                                "weight": "Bolder"
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    },
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "$($jsonResult.TestResults.TestResult)",
+                                                "wrap": true
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "TableRow",
+                                "cells": [
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "TestDescription",
+                                                "wrap": true,
+                                                "weight": "Bolder"
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    },
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "$($jsonResult.TestResults.TestDescription)",
+                                                "wrap": true
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "TableRow",
+                                "cells": [
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "Explanation",
+                                                "wrap": true,
+                                                "weight": "Bolder"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "$($reply.Replace('"',"'"))",
+  
+                                                "wrap": true
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
                                 "type": "TableRow",
                                 "cells": [
                                     {
@@ -156,222 +251,10 @@ $cardBody = @"
                                         "verticalContentAlignment": "Center"
                                     }
                                 ]
-                            },
-                            {
-                                "type": "TableRow",
-                                "cells": [
-                                    {
-                                        "type": "TableCell",
-                                        "items": [
-                                            {
-                                                "type": "TextBlock",
-                                                "text": "Name",
-                                                "wrap": true,
-                                                "weight": "Bolder"
-                                            }
-                                        ],
-                                        "verticalContentAlignment": "Center"
-                                    },
-                                    {
-                                        "type": "TableCell",
-                                        "items": [
-                                            {
-                                                "type": "TextBlock",
-                                                "text": "$($policyName)",
-                                                "wrap": true
-                                            }
-                                        ],
-                                        "verticalContentAlignment": "Center"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "TableRow",
-                                "cells": [
-                                    {
-                                        "type": "TableCell",
-                                        "items": [
-                                            {
-                                                "type": "TextBlock",
-                                                "text": "TestResult",
-                                                "wrap": true,
-                                                "weight": "Bolder"
-                                            }
-                                        ],
-                                        "verticalContentAlignment": "Center"
-                                    },
-                                    {
-                                        "type": "TableCell",
-                                        "items": [
-                                            {
-                                                "type": "TextBlock",
-                                                "text": "$($jsonResult.TestResults.TestResult)",
-                                                "wrap": true
-                                            }
-                                        ],
-                                        "verticalContentAlignment": "Center"
-                                    },
-                                     {
-                                        "type": "TableCell",
-                                        "items": [
-                                            {
-                                                "type": "TextBlock",
-                                                "text": "Reason",
-                                                "wrap": true,
-                                                "weight": "Bolder"
-                                            }
-                                        ],
-                                        "verticalContentAlignment": "Center"
-                                    },
-                                    {
-                                        "type": "TableCell",
-                                        "items": [
-                                            {
-                                                "type": "TextBlock",
-                                                "text": "$($jsonResult.TestResults.SkippedReason)",
-                                                "wrap": true
-                                            }
-                                        ],
-                                        "verticalContentAlignment": "Center"
-                                    }
-                                    {
-                                        "type": "TableCell",
-                                        "items": [
-                                            {
-                                                "type": "TextBlock",
-                                                "text": "Description",
-                                                "wrap": true,
-                                                "weight": "Bolder"
-                                            }
-                                        ],
-                                        "verticalContentAlignment": "Center"
-                                    },
-                                    {
-                                        "type": "TableCell",
-                                        "items": [
-                                            {
-                                                "type": "TextBlock",
-                                                "text": "$($jsonResult.TestResults.TestDescription)",
-                                                "wrap": true
-                                            }
-                                        ],
-                                        "verticalContentAlignment": "Center"
-                                    }
-                                ]
                             }
                         ],
                         "firstRowAsHeaders": false,
                         "showGridLines": false
-                    },
-                    {
-                        "type": "Container",
-                        "targetWidth": "VeryNarrow",
-                        "items": [
-                            {
-                                "text": "Status",
-                                "weight": "Bolder",
-                                "wrap": true,
-                                "type": "TextBlock"
-                            },
-                            {
-                                "text": "Waiting for Review",
-                                "wrap": true,
-                                "type": "TextBlock",
-                                "spacing": "None"
-                            },
-                            {
-                                "text": "Due Date",
-                                "weight": "Bolder",
-                                "wrap": true,
-                                "spacing": "Small",
-                                "type": "TextBlock"
-                            },
-                            {
-                                "text": "May 21, 2023",
-                                "wrap": true,
-                                "spacing": "None",
-                                "type": "TextBlock"
-                            },
-                            {
-                                "text": "Priority",
-                                "weight": "Bolder",
-                                "wrap": true,
-                                "spacing": "Small",
-                                "type": "TextBlock"
-                            },
-                            {
-                                "type": "ColumnSet",
-                                "columns": [
-                                    {
-                                        "type": "Column",
-                                        "width": "auto",
-                                        "items": [
-                                            {
-                                                "type": "Icon",
-                                                "name": "Flag",
-                                                "color": "Attention",
-                                                "size": "xSmall",
-                                                "horizontalAlignment": "Center"
-                                            }
-                                        ],
-                                        "verticalContentAlignment": "Center"
-                                    },
-                                    {
-                                        "type": "Column",
-                                        "width": "stretch",
-                                        "items": [
-                                            {
-                                                "color": "Attention",
-                                                "text": "Critical",
-                                                "wrap": true,
-                                                "spacing": "Small",
-                                                "type": "TextBlock"
-                                            }
-                                        ],
-                                        "spacing": "Small"
-                                    }
-                                ],
-                                "spacing": "None"
-                            },
-                            {
-                                "text": "Assigned To",
-                                "weight": "Bolder",
-                                "wrap": true,
-                                "spacing": "Small",
-                                "type": "TextBlock"
-                            },
-                            {
-                                "type": "ColumnSet",
-                                "columns": [
-                                    {
-                                        "type": "Column",
-                                        "width": "auto",
-                                        "items": [
-                                            {
-                                                "type": "Image",
-                                                "url": "https://raw.githubusercontent.com/OfficeDev/Microsoft-Teams-Card-Samples/main/samples/issue/assets/avatar.png",
-                                                "width": "16px"
-                                            }
-                                        ],
-                                        "verticalContentAlignment": "Center",
-                                        "horizontalAlignment": "Center"
-                                    },
-                                    {
-                                        "type": "Column",
-                                        "width": "stretch",
-                                        "items": [
-                                            {
-                                                "type": "TextBlock",
-                                                "text": "Charlotte Waltson",
-                                                "wrap": true
-                                            }
-                                        ],
-                                        "spacing": "Small"
-                                    }
-                                ],
-                                "spacing": "None"
-                            }
-                        ]
                     },
                     {
                         "actions": [
@@ -390,7 +273,10 @@ $cardBody = @"
                         "targetWidth": "AtLeast:Narrow",
                         "spacing": "ExtraLarge"
                     }
-                ],
+                ],   
+                "msteams": {
+                     "width": "Full"
+                },
                 "version": "1.5"
             }
         }
