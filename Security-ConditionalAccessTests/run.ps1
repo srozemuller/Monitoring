@@ -25,7 +25,7 @@ $Request.Body | ConvertTo-Json -Depth 99
 $laUri = $Request.Body.data.alertContext.condition.allOf[0].linkToFilteredSearchResultsUI
 
 $laApiFilter = $Request.Body.data.alertContext.condition.allOf[0].linkToFilteredSearchResultsAPI
-
+$ruleDescription = $Request.Body.data.essentials.description
 $results = Invoke-RestMethod -uri $laApiFilter -Method get -Headers $monitorHeaders
 
 # Check if the results are in an array or just one row that returns.. If more rows then, select last one. 
@@ -113,6 +113,29 @@ $cardBody = @"
                                             {
                                                 "type": "TextBlock",
                                                 "text": "$($policyName)",
+                                                "wrap": true
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    },
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "Rule description",
+                                                "wrap": true,
+                                                "weight": "Bolder"
+                                            }
+                                        ],
+                                        "verticalContentAlignment": "Center"
+                                    },
+                                    {
+                                        "type": "TableCell",
+                                        "items": [
+                                            {
+                                                "type": "TextBlock",
+                                                "text": "$($ruleDescription)",
                                                 "wrap": true
                                             }
                                         ],
