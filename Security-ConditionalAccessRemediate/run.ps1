@@ -20,7 +20,10 @@ $monitorHeaders = @{
 }
 $Request.Body | ConvertTo-Json -Depth 99
 
-$token
+$
+
+$graphToken = Get-AzAccessToken
+$graphToken | ConvertFrom-Json
 # The alert schema does not provide the content to look in to. Instead of that, I grab the linkToSearchResultsAPI value that allows me to get the content from Log Analytics.
 $laUri = $Request.Body.data.alertContext.condition.allOf[0].linkToFilteredSearchResultsUI
 
@@ -30,21 +33,37 @@ $results = Invoke-RestMethod -uri $laApiFilter -Method get -Headers $monitorHead
 
 $policies = Get-ChildItem .\CAPolicies
 $policyObjects = [system.Collections.ArrayList]@()
-  $caPolicyUrl = "/beta/identity/conditionalAccess/policies"
+$caPolicyUrl = "https://graph.microsoft.com/beta/identity/conditionalAccess/policies"
 foreach ($policy in $policies) {
-  $policyObjects.Add((Get-content $policy  | Convertfrom-json -Depth 99))
+  $policyObjects.Add((Get-content $policy  | Convertfrom-json -Depth 99)) >> $null
 }
-$policyToRemediate = $policyObjects | Where-Object {$_.id -eq '9352a236-204a-4d39-8cd2-3d2cfab90abc'}
-$policyToRemediate.PSObject.Properties.Remove('id')
-$policyToRemediate.PSObject.Properties.Remove('createdDateTime')
-$policyToRemediate.PSObject.Properties.Remove('modifiedDateTime')
-$policyToRemediate.PSObject.Properties.Remove('templateId')
-if ($policyToRemediate.grantControls.authenticationStrength) {
-  $strenghId = $policyToRemediate.grantControls.authenticationStrength.id
-  $policyToRemediate.grantControls.PSObject.Properties.Remove('authenticationStrength')
-  $policyToRemediate.grantControls | Add-Member -MemberType NoteProperty -Name "authenticationStrength" -Value @{ id = $strenghId } -Force
+
+# Check if the results are in an array or just one row that returns.. If more rows then, select last one. 
+if (($results.tables.rows[-1]) -is [System.Object[]]){
+    $jsonResult = $($results.tables.rows[-1])[-2] | ConvertFrom-Json
+    $initiator = $($results.tables.rows[-1])[-3] | ConvertFrom-Json
+} else {
+    $jsonResult = $($results.tables.rows[-2]) | ConvertFrom-Json
+    $initiator = $($results.tables.rows[-3]) | ConvertFrom-Json
 }
-Invoke-RestMethod -Method POST -Uri $caPolicyUrl -body $($policyToRemediate | ConvertTo-Json -Depth 99)
+
+try {
+    $policyToRemediate = $policyObjects | Where-Object {$_.id -eq $jsonResult.id}
+    $policyToRemediate.PSObject.Properties.Remove('id')
+    $policyToRemediate.PSObject.Properties.Remove('createdDateTime')
+    $policyToRemediate.PSObject.Properties.Remove('modifiedDateTime')
+    $policyToRemediate.PSObject.Properties.Remove('templateId')
+    if ($policyToRemediate.grantControls.authenticationStrength) {
+    $strenghId = $policyToRemediate.grantControls.authenticationStrength.id
+    $policyToRemediate.grantControls.PSObject.Properties.Remove('authenticationStrength')
+    $policyToRemediate.grantControls | Add-Member -MemberType NoteProperty -Name "authenticationStrength" -Value @{ id = $strenghId } -Force
+    }
+    $remediationState = Invoke-RestMethod -Method POST -Uri $caPolicyUrl -body $($policyToRemediate | ConvertTo-Json -Depth 99)
+
+}
+catch (
+
+)
 
 $cardBody = @"
 {
@@ -56,22 +75,8 @@ $cardBody = @"
             "content": {
                 "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
                 "type": "AdaptiveCard",
-                "speak": "Conditional Access Test results",
+                "speak": "Conditional Access Policy Deleted!",
                 "body": [
-                    {
-                        "inlines": [
-                            {
-                                "type": "TextRun",
-                                "size": "Small",
-                                "text": "Android Scrum Project / SSP-98",
-                                "selectAction": {
-                                    "url": "https://adaptivecards.io",
-                                    "type": "Action.OpenUrl"
-                                }
-                            }
-                        ],
-                        "type": "RichTextBlock"
-                    },
                     {
                         "columns": [
                             {
@@ -90,7 +95,7 @@ $cardBody = @"
                                 "items": [
                                     {
                                         "size": "Large",
-                                        "text": "Conditional Access has changed!",
+                                        "text": "Conditional Access has DELETED!",
                                         "weight": "Bolder",
                                         "wrap": true,
                                         "type": "TextBlock"
@@ -192,38 +197,11 @@ $cardBody = @"
                                         "items": [
                                             {
                                                 "type": "TextBlock",
-                                                "text": "Name",
+                                                "text": "$($jsonResult.displayName)",
                                                 "wrap": true
                                             }
                                         ],
                                         "verticalContentAlignment": "Center"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "TableRow",
-                                "cells": [
-                                    {
-                                        "type": "TableCell",
-                                        "items": [
-                                            {
-                                                "type": "TextBlock",
-                                                "text": "Explanation",
-                                                "wrap": true,
-                                                "weight": "Bolder"
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "type": "TableCell",
-                                        "items": [
-                                            {
-                                                "type": "TextBlock",
-                                                "text": "$($reply.Replace('"',"'"))",
-  
-                                                "wrap": true
-                                            }
-                                        ]
                                     }
                                 ]
                             },
