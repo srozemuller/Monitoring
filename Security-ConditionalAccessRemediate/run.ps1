@@ -20,7 +20,6 @@ $monitorHeaders = @{
 }
 $Request.Body | ConvertTo-Json -Depth 99
 
-$
 
 $graphToken = Get-AzAccessToken
 $graphToken | ConvertFrom-Json
@@ -61,10 +60,9 @@ try {
     $remediationState = Invoke-RestMethod -Method POST -Uri $caPolicyUrl -body $($policyToRemediate | ConvertTo-Json -Depth 99)
 
 }
-catch (
-
-)
-
+catch {
+    Write-Error $_
+}
 $cardBody = @"
 {
     "type": "message",
