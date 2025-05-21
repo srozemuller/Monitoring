@@ -21,8 +21,11 @@ $monitorHeaders = @{
 $Request.Body | ConvertTo-Json -Depth 99
 
 
-$graphToken = Get-AzAccessToken
-$graphToken | ConvertFrom-Json
+$response = Invoke-WebRequest -UseBasicParsing -Uri "$($env:IDENTITY_ENDPOINT)?resource=https://graph.microsoft.com/.default" -Headers $headers
+$tokenGraph = ($response.Content | Convertfrom-json).access_token
+$tokenGraph
+
+
 # The alert schema does not provide the content to look in to. Instead of that, I grab the linkToSearchResultsAPI value that allows me to get the content from Log Analytics.
 $laUri = $Request.Body.data.alertContext.condition.allOf[0].linkToFilteredSearchResultsUI
 
