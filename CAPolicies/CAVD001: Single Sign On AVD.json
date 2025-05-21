@@ -1,0 +1,55 @@
+{
+  "id": "4c08e562-f594-4d60-b843-c432b72e90e5",
+  "templateId": null,
+  "displayName": "CAVD001: Single Sign On AVD",
+  "createdDateTime": "2024-06-13T12:22:57.1536604Z",
+  "modifiedDateTime": "2024-07-08T09:03:49.487212Z",
+  "state": "enabled",
+  "partialEnablementStrategy": null,
+  "sessionControls": null,
+  "conditions": {
+    "userRiskLevels": [],
+    "signInRiskLevels": [],
+    "clientAppTypes": [
+      "all"
+    ],
+    "platforms": null,
+    "locations": null,
+    "times": null,
+    "deviceStates": null,
+    "devices": null,
+    "clientApplications": null,
+    "applications": {
+      "includeApplications": [
+        "a4a365df-50f1-4397-bc59-1a1564b8bb9c",
+        "270efc09-cd0d-444b-a71f-39af4910ec45"
+      ],
+      "excludeApplications": [],
+      "includeUserActions": [],
+      "includeAuthenticationContextClassReferences": [],
+      "applicationFilter": null
+    },
+    "users": {
+      "includeUsers": [],
+      "excludeUsers": [],
+      "includeGroups": [
+        "0f273ab4-a659-4d70-851e-94cc49423bf4"
+      ],
+      "excludeGroups": [],
+      "includeRoles": [],
+      "excludeRoles": [],
+      "includeGuestsOrExternalUsers": null,
+      "excludeGuestsOrExternalUsers": null
+    }
+  },
+  "grantControls": {
+    "operator": "OR",
+    "builtInControls": [
+      "mfa"
+    ],
+    "customAuthenticationFactors": [],
+    "termsOfUse": [],
+    "authenticationStrength@odata.context": "https://graph.microsoft.com/beta/$metadata#identity/conditionalAccess/policies('4c08e562-f594-4d60-b843-c432b72e90e5')/grantControls/authenticationStrength/$entity",
+    "authenticationStrength": null
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "id": "e3ffffd1-1220-4398-a098-46420a3e4cd1",
+  "templateId": null,
+  "displayName": "CA004: Require multifactor authentication for all users",
+  "createdDateTime": "2022-10-09T07:06:30.5379524Z",
+  "modifiedDateTime": "2023-11-17T20:00:11.3016868Z",
+  "state": "enabled",
+  "partialEnablementStrategy": null,
+  "sessionControls": null,
+  "conditions": {
+    "userRiskLevels": [],
+    "signInRiskLevels": [],
+    "clientAppTypes": [
+      "all"
+    ],
+    "platforms": null,
+    "times": null,
+    "deviceStates": null,
+    "devices": null,
+    "clientApplications": null,
+    "applications": {
+      "includeApplications": [
+        "All"
+      ],
+      "excludeApplications": [
+        "499b84ac-1321-427f-aa17-267ca6975798",
+        "372140e0-b3b7-4226-8ef9-d57986796201"
+      ],
+      "includeUserActions": [],
+      "includeAuthenticationContextClassReferences": [],
+      "applicationFilter": null
+    },
+    "users": {
+      "includeUsers": [
+        "All"
+      ],
+      "excludeUsers": [
+        "15c3daf7-9ea7-4e4a-a03c-fedec8d20ff8",
+        "a8c525c9-f5d4-4f95-b0d9-297b6f069aae",
+        "82cff932-62f5-493e-8351-c2b8b8ef061b"
+      ],
+      "includeGroups": [],
+      "excludeGroups": [
+        "dcd2ae13-39c9-4be1-9e52-dd70c807a4fb"
+      ],
+      "includeRoles": [],
+      "excludeRoles": [],
+      "includeGuestsOrExternalUsers": null,
+      "excludeGuestsOrExternalUsers": null
+    },
+    "locations": {
+      "includeLocations": [
+        "All"
+      ],
+      "excludeLocations": [
+        "AllTrusted"
+      ]
+    }
+  },
+  "grantControls": {
+    "operator": "OR",
+    "builtInControls": [
+      "mfa"
+    ],
+    "customAuthenticationFactors": [],
+    "termsOfUse": [],
+    "authenticationStrength@odata.context": "https://graph.microsoft.com/beta/$metadata#identity/conditionalAccess/policies('e3ffffd1-1220-4398-a098-46420a3e4cd1')/grantControls/authenticationStrength/$entity",
+    "authenticationStrength": null
+  }
+}

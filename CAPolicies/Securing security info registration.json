@@ -1,0 +1,65 @@
+{
+  "id": "3f7d96e5-de49-4cdd-9472-9126cb38ba53",
+  "templateId": "b8bda7f8-6584-4446-bce9-d871480e53fa",
+  "displayName": "Securing security info registration",
+  "createdDateTime": "2023-02-15T20:14:02.1857362Z",
+  "modifiedDateTime": "2023-02-23T11:10:08.3975845Z",
+  "state": "enabledForReportingButNotEnforced",
+  "partialEnablementStrategy": null,
+  "sessionControls": null,
+  "conditions": {
+    "userRiskLevels": [],
+    "signInRiskLevels": [],
+    "clientAppTypes": [
+      "all"
+    ],
+    "platforms": null,
+    "times": null,
+    "deviceStates": null,
+    "devices": null,
+    "clientApplications": null,
+    "applications": {
+      "includeApplications": [],
+      "excludeApplications": [],
+      "includeUserActions": [
+        "urn:user:registersecurityinfo"
+      ],
+      "includeAuthenticationContextClassReferences": [],
+      "applicationFilter": null
+    },
+    "users": {
+      "includeUsers": [
+        "All"
+      ],
+      "excludeUsers": [
+        "602b7044-910a-4155-b3fd-bd36ae7d1e1a"
+      ],
+      "includeGroups": [],
+      "excludeGroups": [],
+      "includeRoles": [],
+      "excludeRoles": [
+        "62e90394-69f5-4237-9190-012177145e10"
+      ],
+      "includeGuestsOrExternalUsers": null,
+      "excludeGuestsOrExternalUsers": null
+    },
+    "locations": {
+      "includeLocations": [
+        "All"
+      ],
+      "excludeLocations": [
+        "AllTrusted"
+      ]
+    }
+  },
+  "grantControls": {
+    "operator": "OR",
+    "builtInControls": [
+      "mfa"
+    ],
+    "customAuthenticationFactors": [],
+    "termsOfUse": [],
+    "authenticationStrength@odata.context": "https://graph.microsoft.com/beta/$metadata#identity/conditionalAccess/policies('3f7d96e5-de49-4cdd-9472-9126cb38ba53')/grantControls/authenticationStrength/$entity",
+    "authenticationStrength": null
+  }
+}
